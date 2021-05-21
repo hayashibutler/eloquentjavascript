@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>chap 2 - Program Structure</title>
+</head>
+<body>
+<h4>Chapter 2</h4>
+<h2>Program Structure</h2>
+<blockquote>And my heart glows bright red under my filmy, translucent skin and they have to administer 10cc of JavaScript to get me to come back. (I respond well to toxins in the blood.) Man, that stuff will kick the peaches right out your gills!<br>
+-_why, <i>Why's (Poignant) Guide to Ruby</i></blockquote>
+<img src="/images/chapter_picture_2.jpg">
+<p>In this chapter, we will start to do things that can actually be called <i>programming</i>. We will expand our command of the JavaScript language beyond the nouns and sentence fragments we’ve seen so far, to the point where we can express meaningful prose.</p>
+<h3>Expressions and statements</h3>
+<p>In <a href="/01_values.html">Chapter 1</a>, we made values and applied operators to them to get new values. Creating values like this is the main substance of any JavaScript program. But that substance has to be framed in a larger structure to be useful. So that’s what we’ll cover next.</p>
+<p>A fragment of code that produces a value is called an expression. Every value that is written literally (such as <code>22</code> or <code>"psychoanalysis"</code>) is an expression. An expression between parentheses is also an expression, as is a binary operator applied to two expressions or a unary operator applied to one.</p>
+<p>This shows part of the beauty of a language-based interface. Expressions can contain other expressions in a way similar to how subsentences in human languages are nested—a subsentence can contain its own subsentences, and so on. This allows us to build expressions that describe arbitrarily complex computations.</p>
+<p>If an expression corresponds to a sentence fragment, a JavaScript <i>statement</i> corresponds to a full sentence. A program is a list of statements.</p>
+<p>The simplest kind of statement is an expression with a semicolon after it. This is a program:</p>
+<pre>1;
+!false;</pre>
+<p>It is a useless program, though. An expression can be content to just produce a value, which can then be used by the enclosing code. A statement stands on its own, so it amounts to something only if it affects the world. It could display something on the screen—that counts as changing the world—or it could change the internal state of the machine in a way that will affect the statements that come after it. These changes are called side <i>effects</i>. The statements in the previous example just produce the values <code>1</code> and <code>true</code> and then immediately throw them away. This leaves no impression on the world at all. When you run this program, nothing observable happens.</p>
+<p>In some cases, JavaScript allows you to omit the semicolon at the end of a statement. In other cases, it has to be there, or the next line will be treated as part of the same statement. The rules for when it can be safely omitted are somewhat complex and error-prone. So in this book, every statement that needs a semicolon will always get one. I recommend you do the same, at least until you’ve learned more about the subtleties of missing semicolons.</p>
+<h3>Bindings</h3>
+<p>How does a program keep an internal state? How does it remember things? We have seen how to produce new values from old values, but this does not change the old values, and the new value has to be immediately used or it will dissipate again. To catch and hold values, JavaScript provides a thing called a binding, or variable:</p>
+<pre>let caught = 5 * 5;</pre>
+<p>That’s a second kind of statement. The special word (<i>keyword</i>) let indicates that this sentence is going to define a binding. It is followed by the name of the binding and, if we want to immediately give it a value, by an = operator and an expression.</p>
+<p>The previous statement creates a binding called <code>caught</code> and uses it to grab hold of the number that is produced by multiplying 5 by 5.</p>
+<p>After a binding has been defined, its name can be used as an expression. The value of such an expression is the value the binding currently holds. Here’s an example:</p>
+<pre>let ten = 10;
+console.log(ten * ten);
+// → 100</pre>
+<p>When a binding points at a value, that does not mean it is tied to that value forever. The = operator can be used at any time on existing bindings to disconnect them from their current value and have them point to a new one.</p>
+<pre>let mood = "light";
+console.log(mood);
+// → light
+mood = "dark";
+console.log(mood);
+// → dark</pre>
+<p>You should imagine bindings as tentacles, rather than boxes. They do not <i>contain</i> values; they <i>grasp</i> them—two bindings can refer to the same value. A program can access only the values that it still has a reference to. When you need to remember something, you grow a tentacle to hold on to it or you reattach one of your existing tentacles to it.</p>
+<p>Let’s look at another example. To remember the number of dollars that Luigi still owes you, you create a binding. And then when he pays back $35, you give this binding a new value.</p>
+<pre>let luigisDebt = 140;
+luigisDebt = luigisDebt - 35;
+console.log(luigisDebt);
+// → 105</pre>
+<p>When you define a binding without giving it a value, the tentacle has nothing to grasp, so it ends in thin air. If you ask for the value of an empty binding, you’ll get the value <code>undefined</code>.</p>
+<p>A single <code>let</code> statement may define multiple bindings. The definitions must be separated by commas.</p>
+<pre>let one = 1, two = 2;
+console.log(one + two);
+// → 3</pre>
+<p>The words <code>var</code> and <code>const</code> can also be used to create bindings, in a way similar to <code>let</code>.</p>
+<pre>var name = "Ayda";
+const greeting = "Hello ";
+console.log(greeting + name);
+// → Hello Ayda</pre>
+<p>The first, <code>var</code> (short for “variable”), is the way bindings were declared in pre-2015 JavaScript. I’ll get back to the precise way it differs from <code>let</code> in the <a href="/03_functions.html">next chapter</a>. For now, remember that it mostly does the same thing, but we’ll rarely use it in this book because it has some confusing properties.</p>
+<p>The word <code>const</code> stands for <i>constant</i>. It defines a constant binding, which points at the same value for as long as it lives. This is useful for bindings that give a name to a value so that you can easily refer to it later.</p>
+<p>Binding names can be any word. Digits can be part of binding names—<code>catch22</code> is a valid name, for example—but the name must not start with a digit. A binding name may include dollar signs ($) or underscores (_) but no other punctuation or special characters.</p>
+<p>Words with a special meaning, such as <code>let</code>, are <i>keywords</i>, and they may not be used as binding names. There are also a number of words that are “reserved for use” in future versions of JavaScript, which also can’t be used as binding names. The full list of keywords and reserved words is rather long.</p>
+<pre>break case catch class const continue debugger default
+delete do else enum export extends false finally for
+function if implements import interface in instanceof let
+new package private protected public return static super
+switch this throw true try typeof var void while with yield</pre>
+<p>Don’t worry about memorizing this list. When creating a binding produces an unexpected syntax error, see whether you’re trying to define a reserved word.</p>
+<h3>The environment</h3>
+<p>The collection of bindings and their values that exist at a given time is called the <i>environment</i>. When a program starts up, this environment is not empty. It always contains bindings that are part of the language standard, and most of the time, it also has bindings that provide ways to interact with the surrounding system. For example, in a browser, there are functions to interact with the currently loaded website and to read mouse and keyboard input.</p>
+<h3>Functions</h3>
+<p>A lot of the values provided in the default environment have the type function. A function is a piece of program wrapped in a value. Such values can be applied in order to run the wrapped program. For example, in a browser environment, the binding prompt holds a function that shows a little dialog box asking for user input. It is used like this:</p>
+<pre>prompt("Enter passcode");</pre>
+<img src="/images/prompt.png">
+<p>Executing a function is called <i>invoking, calling, or applying</i> it. You can call a function by putting parentheses after an expression that produces a function value. Usually you’ll directly use the name of the binding that holds the function. The values between the parentheses are given to the program inside the function. In the example, the <code>prompt</code> function uses the string that we give it as the text to show in the dialog box. Values given to functions are called <i>arguments</i>. Different functions might need a different number or different types of arguments.</p>
+<p>The <code>prompt</code> function isn’t used much in modern web programming, mostly because you have no control over the way the resulting dialog looks, but can be helpful in toy programs and experiments.</p>
+<h3>The console.log function</h3>
+<p>In the examples, I used <code>console.log</code> to output values. Most JavaScript systems (including all modern web browsers and Node.js) provide a <code>console.log</code> function that writes out its arguments to <i>some</i> text output device. In browsers, the output lands in the JavaScript console. This part of the browser interface is hidden by default, but most browsers open it when you press F12 or, on a Mac, <code>command-option-I</code>. If that does not work, search through the menus for an item named Developer Tools or similar.</p>
+<p>When running the examples (or your own code) on the pages of this book, <code>console.log</code> output will be shown after the example, instead of in the browser’s JavaScript console.</p>
+<pre>let x = 30;
+console.log("the value of x is", x);
+// → the value of x is 30</pre>
+<p>Though binding names cannot contain period characters, <code>console.log</code> does have one. This is because <code>console.log</code> isn’t a simple binding. It is actually an expression that retrieves the log property from the value held by the console binding. We’ll find out exactly what this means in <a href="/04_data.html">Chapter 4</a>.</p>
+<h3>Return values</h3>
+<p>Showing a dialog box or writing text to the screen is a <i>side effect</i>. A lot of functions are useful because of the side effects they produce. Functions may also produce values, in which case they don’t need to have a side effect to be useful. For example, the function Math.max takes any amount of number arguments and gives back the greatest.</p>
+<pre>console.log(Math.max(2, 4));
+// → 4</pre>
+<p>When a function produces a value, it is said to <i>return</i> that value. Anything that produces a value is an expression in JavaScript, which means function calls can be used within larger expressions. Here a call to <code>Math.min</code>, which is the opposite of <code>Math.max</code>, is used as part of a plus expression:</p>
+<pre>console.log(Math.min(2, 4) + 100);
+// → 102</pre>
+<p>The <a href="/03_functions.html">next chapter</a> explains how to write your own functions.</p>
+<h3>Control flow</h3>
+<p>When your program contains more than one statement, the statements are executed as if they are a story, from top to bottom. This example program has two statements. The first one asks the user for a number, and the second, which is executed after the first, shows the square of that number.</p>
+<pre>let theNumber = Number(prompt("Pick a number"));
+console.log("Your number is the square root of " +
+            theNumber * theNumber);</pre>
+<p>The function <code>Number</code> converts a value to a number. We need that conversion because the result of <code>prompt</code> is a string value, and we want a number. There are similar functions called <code>String</code> and <code>Boolean</code> that convert values to those types.</p>
+<p>Here is the rather trivial schematic representation of straight-line control flow:</p>
+<img src="/images/controlflow-straight.svg">
+<h3>Conditional execution</h3>
+<p>Not all programs are straight roads. We may, for example, want to create a branching road, where the program takes the proper branch based on the situation at hand. This is called <i>conditional execution</i>.</p>
+<img src="/images/controlflow-if.svg">
+<p>Conditional execution is created with the <code>if</code> keyword in JavaScript. In the simple case, we want some code to be executed if, and only if, a certain condition holds. We might, for example, want to show the square of the input only if the input is actually a number.</p>
+<p>With this modification, if you enter “parrot”, no output is shown.</p>
+<p>The <code>if</code> keyword executes or skips a statement depending on the value of a Boolean expression. The deciding expression is written after the keyword, between parentheses, followed by the statement to execute.</p>
+<p>The <code>Number.isNaN</code> function is a standard JavaScript function that returns <code>true</code> only if the argument it is given is <code>NaN</code>. The <code>Number</code> function happens to return <code>NaN</code> when you give it a string that doesn’t represent a valid number. Thus, the condition translates to “unless <code>theNumber</code> is not-a-number, do this”.</p>
+<p>The statement after the <code>if</code> is wrapped in braces ({ and }) in this example. The braces can be used to group any number of statements into a single statement, called a <i>block</i>. You could also have omitted them in this case, since they hold only a single statement, but to avoid having to think about whether they are needed, most JavaScript programmers use them in every wrapped statement like this. We’ll mostly follow that convention in this book, except for the occasional one-liner.</p>
+<pre>if (1 + 1 == 2) console.log("It's true");
+// → It's true</pre>
+<p>You often won’t just have code that executes when a condition holds true, but also code that handles the other case. This alternate path is represented by the second arrow in the diagram. You can use the <code>else</code> keyword, together with <code>if</code>, to create two separate, alternative execution paths.</p>
+<pre>let theNumber = Number(prompt("Pick a number"));
+if (!Number.isNaN(theNumber)) {
+  console.log("Your number is the square root of " +
+              theNumber * theNumber);
+} else {
+  console.log("Hey. Why didn't you give me a number?");
+}</pre>
+<p>If you have more than two paths to choose from, you can “chain” multiple <code>if/else</code> pairs together. Here’s an example:</p>
+<pre>let num = Number(prompt("Pick a number"));
+
+if (num < 10) {
+  console.log("Small");
+} else if (num < 100) {
+  console.log("Medium");
+} else {
+  console.log("Large");
+}</pre>
+<p>The program will first check whether <code>num</code> is less than 10. If it is, it chooses that branch, shows "<code>Small</code>", and is done. If it isn’t, it takes the else branch, which itself contains a second if. If the second condition (<code>< 100</code>) holds, that means the number is at least 10 but below 100, and "<code>Medium</code>" is shown. If it doesn’t, the second and last <code>else</code> branch is chosen.</p>
+<p>The schema for this program looks something like this:</p>
+<img src="/images/controlflow-nested-if.svg">
+<h3 id="loops">while and do loops</h3>
+<p>Consider a program that outputs all even numbers from 0 to 12. One way to write this is as follows:</p>
+<pre>console.log(0);
+console.log(2);
+console.log(4);
+console.log(6);
+console.log(8);
+console.log(10);
+console.log(12);</pre>
+<p>That works, but the idea of writing a program is to make something <i>less</i> work, not more. If we needed all even numbers less than 1,000, this approach would be unworkable. What we need is a way to run a piece of code multiple times. This form of control flow is called a <i>loop</i>.</p>
+<img src="/images/controlflow-loop.svg">
+<p>Looping control flow allows us to go back to some point in the program where we were before and repeat it with our current program state. If we combine this with a binding that counts, we can do something like this:</p>
+<pre>let number = 0;
+while (number <= 12) {
+  console.log(number);
+  number = number + 2;
+}
+// → 0
+// → 2
+//   … etcetera</pre>
+<p>A statement starting with the keyword <code>while</code> creates a loop. The word <code>while</code> is followed by an expression in parentheses and then a statement, much like <code>if</code>. The loop keeps entering that statement as long as the expression produces a value that gives <code>true</code> when converted to Boolean.</p>
+<p>The <code>number</code> binding demonstrates the way a binding can track the progress of a program. Every time the loop repeats, <code>number</code> gets a value that is 2 more than its previous value. At the beginning of every repetition, it is compared with the number 12 to decide whether the program’s work is finished.</p>
+<pre>let result = 1;
+let counter = 0;
+while (counter < 10) {
+  result = result * 2;
+  counter = counter + 1;
+}
+console.log(result);
+// → 1024</pre>
+<p>The counter could also have started at 1 and checked for <code><= 10</code>, but for reasons that will become apparent in <a href="/04_data.html">Chapter 4</a>, it is a good idea to get used to counting from 0.</p>
+<p>A <code>do</code> loop is a control structure similar to a <code>while</code> loop. It differs only on one point: a <code>do</code> loop always executes its body at least once, and it starts testing whether it should stop only after that first execution. To reflect this, the test appears after the body of the loop.</p>
+<pre>let yourName;
+do {
+  yourName = prompt("Who are you?");
+} while (!yourName);
+console.log(yourName);</pre>
+<p>This program will force you to enter a name. It will ask again and again until it gets something that is not an empty string. Applying the <code>!</code> operator will convert a value to Boolean type before negating it, and all strings except <code>""</code> convert to <code>true</code>. This means the loop continues going round until you provide a non-empty name.</p>
+<h3>Indenting Code</h3>
+<p>In the examples, I’ve been adding spaces in front of statements that are part of some larger statement. These spaces are not required—the computer will accept the program just fine without them. In fact, even the line breaks in programs are optional. You could write a program as a single long line if you felt like it.</p>
+<p>The role of this indentation inside blocks is to make the structure of the code stand out. In code where new blocks are opened inside other blocks, it can become hard to see where one block ends and another begins. With proper indentation, the visual shape of a program corresponds to the shape of the blocks inside it. I like to use two spaces for every open block, but tastes differ—some people use four spaces, and some people use tab characters. The important thing is that each new block adds the same amount of space.</p>
+<pre>if (false != true) {
+  console.log("That makes sense.");
+  if (1 < 2) {
+    console.log("No surprise there.");
+  }
+}</pre>
+<p>Most code editor programs (including the one in this book) will help by automatically indenting new lines the proper amount.</p>
+<h3>for loops</h3>
+<p>Many loops follow the pattern shown in the <code>while</code> examples. First a “counter” binding is created to track the progress of the loop. Then comes a <code>while</code> loop, usually with a test expression that checks whether the counter has reached its end value. At the end of the loop body, the counter is updated to track progress.</p>
+<p>Because this pattern is so common, JavaScript and similar languages provide a slightly shorter and more comprehensive form, the <code>for</code> loop.</p>
+<pre>for (let number = 0; number <= 12; number = number + 2) {
+  console.log(number);
+}
+// → 0
+// → 2
+//   … etcetera</pre>
+<p>This program is exactly equivalent to the <a href="/02_program_structure.html#loops">earlier</a> even-number-printing example. The only change is that all the statements that are related to the “state” of the loop are grouped together after <code>for</code>.</p>
+<p>The parentheses after a <code>for</code> keyword must contain two semicolons. The part before the first semicolon <i>initializes</i> the loop, usually by defining a binding. The second part is the expression that <i>checks</i> whether the loop must continue. The final part <i>updates</i> the state of the loop after every iteration. In most cases, this is shorter and clearer than a <code>while</code> construct.</p>
+<p>This is the code that computes 2<sup>10</sup> using for instead of while:</p>
+<pre>let result = 1;
+for (let counter = 0; counter < 10; counter = counter + 1) {
+  result = result * 2;
+}
+console.log(result);
+// → 1024</pre>
+<h3>Breaking Out of a Loop</h3>
+<p>Having the looping condition produce <code>false</code> is not the only way a loop can finish. There is a special statement called <code>break</code> that has the effect of immediately jumping out of the enclosing loop.</p>
+<p>This program illustrates the <code>break</code> statement. It finds the first number that is both greater than or equal to 20 and divisible by 7.</p>
+<pre>for (let current = 20; ; current = current + 1) {
+  if (current % 7 == 0) {
+    console.log(current);
+    break;
+  }
+}
+// → 21</pre>
+<p>Using the remainder (%) operator is an easy way to test whether a number is divisible by another number. If it is, the remainder of their division is zero.</p>
+<p>The <code>for</code> construct in the example does not have a part that checks for the end of the loop. This means that the loop will never stop unless the <code>break</code> statement inside is executed.</p>
+<p>If you were to remove that <code>break</code> statement or you accidentally write an end condition that always produces <code>true</code>, your program would get stuck in an <i>infinite loop</i>. A program stuck in an infinite loop will never finish running, which is usually a bad thing.</p>
+<p>If you create an infinite loop in one of the examples on these pages, you’ll usually be asked whether you want to stop the script after a few seconds. If that fails, you will have to close the tab that you’re working in, or on some browsers close your whole browser, to recover.</p>
+<p>The <code>continue</code> keyword is similar to <code>break</code>, in that it influences the progress of a loop. When continue is encountered in a loop body, control jumps out of the body and continues with the loop’s next iteration.</p>
+<h3>Updating bindings succinctly</h3>
+<p>Especially when looping, a program often needs to “update” a binding to hold a value based on that binding’s previous value.</p>
+<pre>counter = counter + 1;</pre>
+<p>JavaScript provides a shortcut for this.</p>
+<pre>counter += 1;</pre>
+<p>Similar shortcuts work for many other operators, such as <code>result *= 2</code> to double <code>result</code> or <code>counter -= 1</code> to count downward.</p>
+<p>This allows us to shorten our counting example a little more.</p>
+<pre>for (let number = 0; number <= 12; number += 2) {
+  console.log(number);
+}</pre>
+<p>For <code>counter += 1</code> and <code>counter -= 1</code>, there are even shorter equivalents: <code>counter++</code> and <code>counter--</code>.</p>
+<h3>Dispatching on a value with switch</h3>
+<p>It is not uncommon for code to look like this:</p>
+<pre>if (x == "value1") action1();
+else if (x == "value2") action2();
+else if (x == "value3") action3();
+else defaultAction();</pre>
+<p>There is a construct called <code>switch</code> that is intended to express such a “dispatch” in a more direct way. Unfortunately, the syntax JavaScript uses for this (which it inherited from the C/Java line of programming languages) is somewhat awkward—a chain of <code>if</code> statements may look better. Here is an example:</p>
+<pre>switch (prompt("What is the weather like?")) {
+  case "rainy":
+    console.log("Remember to bring an umbrella.");
+    break;
+  case "sunny":
+    console.log("Dress lightly.");
+  case "cloudy":
+    console.log("Go outside.");
+    break;
+  default:
+    console.log("Unknown weather type!");
+    break;
+}</pre>
+<p>You may put any number of <code>case</code> labels inside the block opened by <code>switch</code>. The program will start executing at the label that corresponds to the value that <code>switch</code> was given, or at <code>default</code> if no matching value is found. It will continue executing, even across other labels, until it reaches a <code>break</code> statement. In some cases, such as the <code>"sunny"</code> case in the example, this can be used to share some code between cases (it recommends going outside for both sunny and cloudy weather). But be careful—it is easy to forget such a <code>break</code>, which will cause the program to execute code you do not want executed.</p>
+<h3>Capitalization</h3>
+<p>Binding names may not contain spaces, yet it is often helpful to use multiple words to clearly describe what the binding represents. These are pretty much your choices for writing a binding name with several words in it:</p>
+<pre>fuzzylittleturtle
+fuzzy_little_turtle
+FuzzyLittleTurtle
+fuzzyLittleTurtle</pre>
+<p>The first style can be hard to read. I rather like the look of the underscores, though that style is a little painful to type. The standard JavaScript functions, and most JavaScript programmers, follow the bottom style—they capitalize every word except the first. It is not hard to get used to little things like that, and code with mixed naming styles can be jarring to read, so we follow this convention.</p>
+<p>In a few cases, such as the <code>Number</code> function, the first letter of a binding is also capitalized. This was done to mark this function as a constructor. What a constructor is will become clear in <a href="//06_object.html">Chapter 6</a>. For now, the important thing is not to be bothered by this apparent lack of consistency.</p>
+<h3>Comments</h3>
+<p>Often, raw code does not convey all the information you want a program to convey to human readers, or it conveys it in such a cryptic way that people might not understand it. At other times, you might just want to include some related thoughts as part of your program. This is what <code>comments</code> are for.</p>
+<p>A comment is a piece of text that is part of a program but is completely ignored by the computer. JavaScript has two ways of writing comments. To write a single-line comment, you can use two slash characters (<code>//</code>) and then the comment text after it.</p>
+<pre>let accountBalance = calculateBalance(account);
+// It's a green hollow where a river sings
+accountBalance.adjust();
+// Madly catching white tatters in the grass.
+let report = new Report();
+// Where the sun on the proud mountain rings:
+addToReport(accountBalance, report);
+// It's a little valley, foaming like light in a glass.</pre>
+<p>A <code>//</code> comment goes only to the end of the line. A section of text between <code>/*</code> and <code>*/</code> will be ignored in its entirety, regardless of whether it contains line breaks. This is useful for adding blocks of information about a file or a chunk of program.</p>
+<pre>/*
+  I first found this number scrawled on the back of an old
+  notebook. Since then, it has often dropped by, showing up in
+  phone numbers and the serial numbers of products that I've
+  bought. It obviously likes me, so I've decided to keep it.
+*/
+const myNumber = 11213;</pre>
+<h3>Summary</h3>
+<p>You now know that a program is built out of statements, which themselves sometimes contain more statements. Statements tend to contain expressions, which themselves can be built out of smaller expressions.</p>
+<p>Putting statements after one another gives you a program that is executed from top to bottom. You can introduce disturbances in the flow of control by using conditional (<code>if</code>, <code>else</code>, and <code>switch</code>) and looping (<code>while</code>, <code>do</code>, and <code>for</code>) statements.</p>
+<p>Bindings can be used to file pieces of data under a name, and they are useful for tracking state in your program. The environment is the set of bindings that are defined. JavaScript systems always put a number of useful standard bindings into your environment.</p>
+<p>Functions are special values that encapsulate a piece of program. You can invoke them by writing <code>functionName(argument1, argument2)</code>. Such a function call is an expression and may produce a value.</p>
+<h3>Exercises</h3>
+<p>If you are unsure how to test your solutions to the exercises, refer to the <a href="/00_intro.html"></a>Introduction.</p>
+<p>Each exercise starts with a problem description. Read this description and try to solve the exercise. If you run into problems, consider reading the hints after the exercise. Full solutions to the exercises are not included in this book, but you can find them online at <a href="https://eloquentjavascript.net/code/#2">https://eloquentjavascript.net/code</a>. If you want to learn something from the exercises, I recommend looking at the solutions only after you’ve solved the exercise, or at least after you’ve attacked it long and hard enough to have a slight headache.</p>
+<h4>Looping a triangle</h4>
+<p>Write a loop that makes seven calls to console.log to output the following triangle:</p>
+<pre>#
+##
+###
+####
+#####
+######
+#######</pre>
+<p>It may be useful to know that you can find the length of a string by writing <code>.length</code> after it.</p>
+<pre>let abc = "abc";
+console.log(abc.length);
+// → 3</pre>
+<p>Most exercises contain a piece of code that you can modify to solve the exercise. Remember that you can click code blocks to edit them.</p>
+<p>Cách 1</p>
+<pre>let symbol ="";
+let i = 0;
+while (i < 7) {
+	i = i + 1;
+	symbol = symbol +"#";
+	console.log(symbol)
+}</pre>
+<p>Cách 2</p>
+<pre>var symbol ="";
+for (var i = 0; i< 7; i += 1) {
+	symbol = symbol +"#";
+	console.log(symbol, "chieu dai " + symbol.length)
+}</pre>
+<h4>FizzBuzz</h4>
+<p>Write a program that uses console.log to print all the numbers from 1 to 100, with two exceptions. For numbers divisible by 3, print "<code>Fizz</code>" instead of the number, and for numbers divisible by 5 (and not 3), print "<code>Buzz</code>" instead.</p>
+<p>When you have that working, modify your program to print "<code>FizzBuzz</code>" for numbers that are divisible by both 3 and 5 (and still print "<code>Fizz</code>" or "<code>Buzz</code>" for numbers divisible by only one of those).</p>
+<p>(This is actually an interview question that has been claimed to weed out a significant percentage of programmer candidates. So if you solved it, your labor market value just went up.)</p>
+<p>Giải</p>
+<pre>for (var i = 1; i <= 30; i = i + 1) {
+	// console.log(i);
+	if (i % 3 ==0) {
+		if (i % 5 == 0) {
+			console.log("FIZZBUZZ");
+		} else console.log("FIZZ");
+	} else if (i % 5 == 0) {
+		console.log("BUZZ")
+	} else console.log(i);
+}</pre>
+<p>Write a program that creates a string that represents an 8×8 grid, using newline characters to separate lines. At each position of the grid there is either a space or a "#" character. The characters should form a chessboard.</p>
+<p>Passing this string to console.log should show something like this:</p>
+<pre> # # # #
+# # # # 
+ # # # #
+# # # # 
+ # # # #
+# # # # 
+ # # # #
+# # # #</pre>
+<p>When you have a program that generates this pattern, define a binding <code>size = 8</code> and change the program so that it works for any <code>size</code>, outputting a grid of the given width and height.</p>
+<p>Giải</p>
+<pre>let size = 8;
+let board = "";
+for (let y = 0; y < 2; y = y +1) {
+	for (let x = 0; x < size; x = x + 1) {
+		if ((y+x) % 2 ==0) {
+			board = board + " ";
+		} else board = board + "#";
+	} board = board + "\n"
+}
+console.log(board)</pre>
+</body>
+</html>
