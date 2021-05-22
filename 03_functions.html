@@ -151,5 +151,67 @@ function egg() {
 }
 console.log(chicken() + " came first.");
 // → ??</pre>
+<h3>Optional Arguments</h3>
+<p>The following code is allowed and executes without any problem:</p>
+<pre>function square(x) { return x * x; }
+console.log(square(4, true, "hedgehog"));
+// → 16</pre>
+<p>We defined <code>square</code> with only one parameter. Yet when we call it with three, the language doesn’t complain. It ignores the extra arguments and computes the square of the first one.</p>
+<p>JavaScript is extremely broad-minded about the number of arguments you pass to a function. If you pass too many, the extra ones are ignored. If you pass too few, the missing parameters get assigned the value <code>undefined</code>.</p>
+<p>The downside of this is that it is possible—likely, even—that you’ll accidentally pass the wrong number of arguments to functions. And no one will tell you about it.</p>
+<p>The upside is that this behavior can be used to allow a function to be called with different numbers of arguments. For example, this <code>minus</code> function tries to imitate the - operator by acting on either one or two arguments:</p>
+<pre>function minus(a, b) {
+  if (b === undefined) return -a;
+  else return a - b;
+}
+
+console.log(minus(10));
+// → -10
+console.log(minus(10, 5));
+// → 5</pre>
+<p>If you write an = operator after a parameter, followed by an expression, the value of that expression will replace the argument when it is not given.</p>
+<p>For example, this version of <code>power</code> makes its second argument optional. If you don’t provide it or pass the value <code>undefined</code>, it will default to two, and the function will behave like <code>square</code>.</p>
+<pre>function power(base, exponent = 2) {
+  let result = 1;
+  for (let count = 0; count < exponent; count++) {
+    result *= base;
+  }
+  return result;
+}
+
+console.log(power(4));
+// → 16
+console.log(power(2, 6));
+// → 64</pre>
+<p>In the next chapter, we will see a way in which a function body can get at the whole list of arguments it was passed. This is helpful because it makes it possible for a function to accept any number of arguments. For example, <code>console.log</code> does this—it outputs all of the values it is given.</p>
+<pre>console.log("C", "O", 2);
+// → C O 2</pre>
+<h3>Closure</h3>
+<p>The ability to treat functions as values, combined with the fact that local bindings are re-created every time a function is called, brings up an interesting question. What happens to local bindings when the function call that created them is no longer active?</p>
+<p>The following code shows an example of this. It defines a function, <code>wrapValue</code>, that creates a local binding. It then returns a function that accesses and returns this local binding.</p>
+<pre>function wrapValue(n) {
+  let local = n;
+  return () => local;
+}
+
+let wrap1 = wrapValue(1);
+let wrap2 = wrapValue(2);
+console.log(wrap1());
+// → 1
+console.log(wrap2());
+// → 2</pre>
+<p>This is allowed and works as you’d hope—both instances of the binding can still be accessed. This situation is a good demonstration of the fact that local bindings are created anew for every call, and different calls can’t trample on one another’s local bindings.</p>
+<p>This feature—being able to reference a specific instance of a local binding in an enclosing scope—is called closure. A function that references bindings from local scopes around it is called a closure. This behavior not only frees you from having to worry about lifetimes of bindings but also makes it possible to use function values in some creative ways.</p>
+<p>With a slight change, we can turn the previous example into a way to create functions that multiply by an arbitrary amount.</p>
+<pre>function multiplier(factor) {
+  return number => number * factor;
+}
+
+let twice = multiplier(2);
+console.log(twice(5));
+// → 10</pre>
+<p>The explicit <code>local</code> binding from the <code>wrapValue</code> example isn’t really needed since a parameter is itself a local binding.</p>
+<p>Thinking about programs like this takes some practice. A good mental model is to think of function values as containing both the code in their body and the environment in which they are created. When called, the function body sees the environment in which it was created, not the environment in which it is called.</p>
+<p>In the example, <code>multiplier</code> is called and creates an environment in which its <code>factor</code> parameter is bound to 2. The function value it returns, which is stored in <code>twice</code>, remembers this environment. So when that is called, it multiplies its argument by 2.</p>
 </body>
 </html>
