@@ -78,7 +78,7 @@ switch this throw true try typeof var void while with yield</pre>
 console.log("the value of x is", x);
 // → the value of x is 30</pre>
 <p>Though binding names cannot contain period characters, <code>console.log</code> does have one. This is because <code>console.log</code> isn’t a simple binding. It is actually an expression that retrieves the log property from the value held by the console binding. We’ll find out exactly what this means in <a href="/04_data.html">Chapter 4</a>.</p>
-<h3>Return values</h3>
+<h3 id="return_values">Return values</h3>
 <p>Showing a dialog box or writing text to the screen is a <i>side effect</i>. A lot of functions are useful because of the side effects they produce. Functions may also produce values, in which case they don’t need to have a side effect to be useful. For example, the function Math.max takes any amount of number arguments and gives back the greatest.</p>
 <pre>console.log(Math.max(2, 4));
 // → 4</pre>

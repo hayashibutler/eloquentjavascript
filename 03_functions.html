@@ -213,5 +213,214 @@ console.log(twice(5));
 <p>The explicit <code>local</code> binding from the <code>wrapValue</code> example isn’t really needed since a parameter is itself a local binding.</p>
 <p>Thinking about programs like this takes some practice. A good mental model is to think of function values as containing both the code in their body and the environment in which they are created. When called, the function body sees the environment in which it was created, not the environment in which it is called.</p>
 <p>In the example, <code>multiplier</code> is called and creates an environment in which its <code>factor</code> parameter is bound to 2. The function value it returns, which is stored in <code>twice</code>, remembers this environment. So when that is called, it multiplies its argument by 2.</p>
+<h3>Recursion</h3>
+<p>It is perfectly okay for a function to call itself, as long as it doesn’t do it so often that it overflows the stack. A function that calls itself is called recursive. Recursion allows some functions to be written in a different style. Take, for example, this alternative implementation of <code>power</code>:</p>
+<pre>function power(base, exponent) {
+  if (exponent == 0) {
+    return 1;
+  } else {
+    return base * power(base, exponent - 1);
+  }
+}
+
+console.log(power(2, 3));
+// → 8</pre>
+<p>This is rather close to the way mathematicians define exponentiation and arguably describes the concept more clearly than the looping variant. The function calls itself multiple times with ever smaller exponents to achieve the repeated multiplication.</p>
+<p>But this implementation has one problem: in typical JavaScript implementations, it’s about three times slower than the looping version. Running through a simple loop is generally cheaper than calling a function multiple times.</p>
+<p>The dilemma of speed versus elegance is an interesting one. You can see it as a kind of continuum between human-friendliness and machine-friendliness. Almost any program can be made faster by making it bigger and more convoluted. The programmer has to decide on an appropriate balance.</p>
+<p>In the case of the <code>power</code> function, the inelegant (looping) version is still fairly simple and easy to read. It doesn’t make much sense to replace it with the recursive version. Often, though, a program deals with such complex concepts that giving up some efficiency in order to make the program more straightforward is helpful.</p>
+<p>Worrying about efficiency can be a distraction. It’s yet another factor that complicates program design, and when you’re doing something that’s already difficult, that extra thing to worry about can be paralyzing.</p>
+<p>Therefore, always start by writing something that’s correct and easy to understand. If you’re worried that it’s too slow—which it usually isn’t since most code simply isn’t executed often enough to take any significant amount of time—you can measure afterward and improve it if necessary.</p>
+<p>Recursion is not always just an inefficient alternative to looping. Some problems really are easier to solve with recursion than with loops. Most often these are problems that require exploring or processing several “branches”, each of which might branch out again into even more branches.</p>
+<p>Consider this puzzle: by starting from the number 1 and repeatedly either adding 5 or multiplying by 3, an infinite set of numbers can be produced. How would you write a function that, given a number, tries to find a sequence of such additions and multiplications that produces that number?</p>
+<p>For example, the number 13 could be reached by first multiplying by 3 and then adding 5 twice, whereas the number 15 cannot be reached at all.</p>
+<p>Here is a recursive solution:</p>
+<pre>function findSolution(target) {
+  function find(current, history) {
+    if (current == target) {
+      return history;
+    } else if (current > target) {
+      return null;
+    } else {
+      return find(current + 5, `(${history} + 5)`) ||
+             find(current * 3, `(${history} * 3)`);
+    }
+  }
+  return find(1, "1");
+}
+
+console.log(findSolution(24));
+// → (((1 * 3) + 5) * 3)</pre>
+<p>Note that this program doesn’t necessarily find the shortest sequence of operations. It is satisfied when it finds any sequence at all.</p>
+<p>It is okay if you don’t see how it works right away. Let’s work through it, since it makes for a great exercise in recursive thinking.</p>
+<p>The inner function find does the actual recursing. It takes two arguments: the current number and a string that records how we reached this number. If it <code>finds</code> a solution, it returns a string that shows how to get to the target. If no solution can be found starting from this number, it returns <code>null</code>.</p>
+<p>To do this, the function performs one of three actions. If the current number is the target number, the current history is a way to reach that target, so it is returned. If the current number is greater than the target, there’s no sense in further exploring this branch because both adding and multiplying will only make the number bigger, so it returns <code>null</code>. </p>
+<p>Finally, if we’re still below the target number, the function tries both possible paths that start from the current number by calling itself twice, once for addition and once for multiplication. If the first call returns something that is not <code>null</code>, it is returned. Otherwise, the second call is returned, regardless of whether it produces a string or <code>null</code>.</p>
+<p>To better understand how this function produces the effect we’re looking for, let’s look at all the calls to <code>find</code> that are made when searching for a solution for the number 13.</p>
+<pre>find(1, "1")
+  find(6, "(1 + 5)")
+    find(11, "((1 + 5) + 5)")
+      find(16, "(((1 + 5) + 5) + 5)")
+        too big
+      find(33, "(((1 + 5) + 5) * 3)")
+        too big
+    find(18, "((1 + 5) * 3)")
+      too big
+  find(3, "(1 * 3)")
+    find(8, "((1 * 3) + 5)")
+      find(13, "(((1 * 3) + 5) + 5)")
+        found!</pre>
+<p>The indentation indicates the depth of the call stack. The first time <code>find</code> is called, it starts by calling itself to explore the solution that starts with <code>(1 + 5)</code>. That call will further recurse to explore every continued solution that yields a number less than or equal to the target number. Since it doesn’t find one that hits the target, it returns <code>null</code> back to the first call. There the <code>||</code> operator causes the call that explores <code>(1 * 3)</code> to happen. This search has more luck—its first recursive call, through yet another recursive call, hits upon the target number. That innermost call returns a string, and each of the <code>||</code> operators in the intermediate calls passes that string along, ultimately returning the solution.</p>
+<pre>Growing functions</pre>
+<p>There are two more or less natural ways for functions to be introduced into programs.</p>
+<p>The first is that you find yourself writing similar code multiple times. You’d prefer not to do that. Having more code means more space for mistakes to hide and more material to read for people trying to understand the program. So you take the repeated functionality, find a good name for it, and put it into a function.</p>
+<p>The second way is that you find you need some functionality that you haven’t written yet and that sounds like it deserves its own function. You’ll start by naming the function, and then you’ll write its body. You might even start writing code that uses the function before you actually define the function itself.</p>
+<p>How difficult it is to find a good name for a function is a good indication of how clear a concept it is that you’re trying to wrap. Let’s go through an example.</p>
+<p>We want to write a program that prints two numbers: the numbers of <code>cows</code> and <code>chickens</code> on a farm, with the words Cows and Chickens after them and zeros padded before both numbers so that they are always three digits long.</p>
+<pre>007 Cows
+011 Chickens</pre>
+<p>This asks for a function of two arguments—the number of cows and the number of chickens. Let’s get coding.</p>
+<pre>function printFarmInventory(cows, chickens) {
+  let cowString = String(cows);
+  while (cowString.length < 3) {
+    cowString = "0" + cowString;
+  }
+  console.log(`${cowString} Cows`);
+  let chickenString = String(chickens);
+  while (chickenString.length < 3) {
+    chickenString = "0" + chickenString;
+  }
+  console.log(`${chickenString} Chickens`);
+}
+printFarmInventory(7, 11);</pre>
+<p>Writing <code>.length</code> after a string expression will give us the length of that string. Thus, the <code>while</code> loops keep adding zeros in front of the number strings until they are at least three characters long.</p>
+<p>Mission accomplished! But just as we are about to send the farmer the code (along with a hefty invoice), she calls and tells us she’s also started keeping pigs, and couldn’t we please extend the software to also print pigs?</p>
+<p>We sure can. But just as we’re in the process of copying and pasting those four lines one more time, we stop and reconsider. There has to be a better way. Here’s a first attempt:</p>
+<pre>function printZeroPaddedWithLabel(number, label) {
+  let numberString = String(number);
+  while (numberString.length < 3) {
+    numberString = "0" + numberString;
+  }
+  console.log(`${numberString} ${label}`);
+}
+
+function printFarmInventory(cows, chickens, pigs) {
+  printZeroPaddedWithLabel(cows, "Cows");
+  printZeroPaddedWithLabel(chickens, "Chickens");
+  printZeroPaddedWithLabel(pigs, "Pigs");
+}
+
+printFarmInventory(7, 11, 3);</pre>
+<p>It works! But that name, <code>printZeroPaddedWithLabel</code>, is a little awkward. It conflates three things—printing, zero-padding, and adding a label—into a single function.</p>
+<p>Instead of lifting out the repeated part of our program wholesale, let’s try to pick out a single concept.</p>
+<p>Instead of lifting out the repeated part of our program wholesale, let’s try to pick out a single <i>concept</i>.</p>
+<pre>function zeroPad(number, width) {
+  let string = String(number);
+  while (string.length < width) {
+    string = "0" + string;
+  }
+  return string;
+}
+
+function printFarmInventory(cows, chickens, pigs) {
+  console.log(`${zeroPad(cows, 3)} Cows`);
+  console.log(`${zeroPad(chickens, 3)} Chickens`);
+  console.log(`${zeroPad(pigs, 3)} Pigs`);
+}
+
+printFarmInventory(7, 16, 3);</pre>
+<p>A function with a nice, obvious name like <code>zeroPad</code> makes it easier for someone who reads the code to figure out what it does. And such a function is useful in more situations than just this specific program. For example, you could use it to help print nicely aligned tables of numbers.</p>
+<p>How smart and versatile <i>should</i> our function be? We could write anything, from a terribly simple function that can only pad a number to be three characters wide to a complicated generalized number-formatting system that handles fractional numbers, negative numbers, alignment of decimal dots, padding with different characters, and so on.</p>
+<p>A useful principle is to not add cleverness unless you are absolutely sure you’re going to need it. It can be tempting to write general “frameworks” for every bit of functionality you come across. Resist that urge. You won’t get any real work done—you’ll just be writing code that you never use.</p>
+<h3>Functions and side effects</h3>
+<p>Functions can be roughly divided into those that are called for their side effects and those that are called for their return value. (Though it is definitely also possible to both have side effects and return a value.)</p>
+<p>The first helper function in the farm example, <code>printZeroPaddedWithLabel</code>, is called for its side effect: it prints a line. The second version, <code>zeroPad</code>, is called for its return value. It is no coincidence that the second is useful in more situations than the first. Functions that create values are easier to combine in new ways than functions that directly perform side effects.</p>
+<p>A <i>pure</i> function is a specific kind of value-producing function that not only has no side effects but also doesn’t rely on side effects from other code—for example, it doesn’t read global bindings whose value might change. A pure function has the pleasant property that, when called with the same arguments, it always produces the same value (and doesn’t do anything else). A call to such a function can be substituted by its return value without changing the meaning of the code. When you are not sure that a pure function is working correctly, you can test it by simply calling it and know that if it works in that context, it will work in any context. Nonpure functions tend to require more scaffolding to test.</p>
+<p>Still, there’s no need to feel bad when writing functions that are not pure or to wage a holy war to purge them from your code. Side effects are often useful. There’d be no way to write a pure version of <code>console.log</code>, for example, and <code>console.log</code> is good to have. Some operations are also easier to express in an efficient way when we use side effects, so computing speed can be a reason to avoid purity.</p>
+<h3>Summary</h3>
+<p>This chapter taught you how to write your own functions. The <code>function</code> keyword, when used as an expression, can create a function value. When used as a statement, it can be used to declare a binding and give it a function as its value. Arrow functions are yet another way to create functions.</p>
+<pre>// Define f to hold a function value
+const f = function(a) {
+  console.log(a + 2);
+};
+
+// Declare g to be a function
+function g(a, b) {
+  return a * b * 3.5;
+}
+
+// A less verbose function value
+let h = a => a % 3;</pre>
+<p>A key aspect in understanding functions is understanding scopes. Each block creates a new scope. Parameters and bindings declared in a given scope are local and not visible from the outside. Bindings declared with <code>var</code> behave differently—they end up in the nearest function scope or the global scope.</p>
+<p>Separating the tasks your program performs into different functions is helpful. You won’t have to repeat yourself as much, and functions can help organize a program by grouping code into pieces that do specific things.</p>
+<h3>Exercises</h3>
+<h4>Minimum</h4>
+<p>The <a href="/02_program_structure.html#return_values">previous chapter</a> introduced the standard function Math.min that returns its smallest argument. We can build something like that now. Write a function min that takes two arguments and returns their minimum.</p>
+<pre>// Your code here.
+
+console.log(min(0, 10));
+// → 0
+console.log(min(0, -10));
+// → -10</pre>
+<p>giải</p>
+<pre>function min(a,b) {
+	if (a < <code>b</code>) {
+		result = a
+	} else result = b
+	return result
+}
+console.log(min(3,10))</pre>
+<h4>Recursion</h4>
+<p>We’ve seen that <code>%</code> (the remainder operator) can be used to test whether a number is even or odd by using <code>% 2</code> to see whether it’s divisible by two. Here’s another way to define whether a positive whole number is even or odd:</p>
+<ul>
+	<li>Zero is even.</li>
+	<li>One is odd.</li>
+	<li>For any other number <i>N</i>, its evenness is the same as <i>N - 2</i>.</li>
+</ul>
+<p>Define a recursive function <code>isEven</code> corresponding to this description. The function should accept a single parameter (a positive, whole number) and return a Boolean.</p>
+<p>Test it on 50 and 75. See how it behaves on -1. Why? Can you think of a way to fix this?</p>
+<pre>// Your code here.
+
+console.log(isEven(50));
+// → true
+console.log(isEven(75));
+// → false
+console.log(isEven(-1));
+// → ??
+</pre>
+<p>Giải</p>
+<pre>function isEven(n) {
+	if (n==0) return true
+		else if (n==1) return false
+		else if (n<0) return isEven(-n)
+		else return isEven(n-2)
+}
+console.log(isEven(-5))</pre>
+<h4>Bean counting</h4>
+<p>You can get the Nth character, or letter, from a string by writing <code>"string"[N]</code>. The returned value will be a string containing only one character (for example, <code>"b"</code>). The first character has position 0, which causes the last one to be found at position <code>string.length - 1</code>. In other words, a two-character string has length 2, and its characters have positions 0 and 1.
+</p>
+<p>Write a function <code>countBs</code> that takes a string as its only argument and returns a number that indicates how many uppercase “B” characters there are in the string.</p>
+<p>Next, write a function called <code>countChar</code> that behaves like <code>countBs</code>, except it takes a second argument that indicates the character that is to be counted (rather than counting only uppercase “B” characters). Rewrite <code>countBs</code> to make use of this new function.</p>
+<pre>// Your code here.
+
+console.log(countBs("BBC"));
+// → 2
+console.log(countChar("kakkerlak", "k"));
+// → 4</pre>
+<p>Giải</p>
+<pre>function countChr (text, ch) {
+	let count = 0;
+	for (let i =0; i < text.length; i++) {
+		if (text[i] === ch) {
+			count = count + 1
+		}
+	} return count
+}
+
+function countBs(text) {
+	return countChr (text, "H")
+}
+
+console.log(countBs('HRBEHDB'))</pre>
 </body>
 </html>
