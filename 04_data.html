@@ -180,6 +180,95 @@ n11n00 − n10n01
 <p>The value n<sub>1*</sub> refers to the sum of all measurements where the first variable is true, which is 5 in the example table. Likewise, n<sub>*0</sub> refers to the sum of the measurements where the second variable is false.</p>
 <p>So for the pizza table, the part above the division line (the dividend) would be 1×76−4×9 = 40, and the part below it (the divisor) would be the square root of 5×85×10×80, or √340000. This comes out to ϕ ≈ 0.069, which is tiny. Eating pizza does not appear to have influence on the transformations.</p>
 <h3>Computing correlation</h3>
+<p>We can represent a two-by-two table in JavaScript with a four-element array <code>([76, 9, 4, 1])</code>. We could also use other representations, such as an array containing two two-element arrays <code>([[76, 9], [4, 1]])</code> or an object with property names like <code>"11"</code> and <code>"01"</code>, but the flat array is simple and makes the expressions that access the table pleasantly short. We'll interpret the indices to the array as two-bit binary numbers, where the leftmost (most significant) digit refers to the squirrel variable and the rightmost (least significant) digit refers to the event variable. For example, the binary number 10 refers to the case where Jacques did turn into a squirrel, but the event (say, “pizza”) didn't occur. This happened four times. And since binary <code>10</code> is 2 in decimal notation, we will store this number at index 2 of the array.</p>
+<p>This is the function that computes the ϕ coefficient from such an array:</p>
+<pre>function phi(table) {
+  return (table[3] * table[0] - table[2] * table[1]) /
+    Math.sqrt((table[2] + table[3]) *
+              (table[0] + table[1]) *
+              (table[1] + table[3]) *
+              (table[0] + table[2]));
+}
+
+console.log(phi([76, 9, 4, 1]));
+// → 0.068599434</pre>
+<p>This is a direct translation of the ϕ formula into JavaScript. <code>Math.sqrt</code> is the square root function, as provided by the <code>Math</code> object in a standard JavaScript environment. We have to add two fields from the table to get fields like n<sub>1*</sub> because the sums of rows or columns are not stored directly in our data structure.</p>
+<p>Jacques kept his journal for three months. The resulting data set is available in the <a href="https://eloquentjavascript.net/code/#4">coding sandbox</a> for this chapter, where it is stored in the JOURNAL binding and in a downloadable <a href="https://eloquentjavascript.net/code/journal.js">file</a>.</p>
+<p>To extract a two-by-two table for a specific event from the journal, we must loop over all the entries and tally how many times the event occurs in relation to squirrel transformations.</p>
+<pre>function tableFor(event, journal) {
+  let table = [0, 0, 0, 0];
+  for (let i = 0; i < journal.length; i++) {
+    let entry = journal[i], index = 0;
+    if (entry.events.includes(event)) index += 1;
+    if (entry.squirrel) index += 2;
+    table[index] += 1;
+  }
+  return table;
+}
+
+console.log(tableFor("pizza", JOURNAL));
+// -> [76, 9, 4, 1]
+</pre>
+<p>Arrays have an <code>includes</code> method that checks whether a given value exists in the array. The function uses that to determine whether the event name it is interested in is part of the event list for a given day.</p>
+<p>The body of the loop in <code>tableFor</code> figures out which box in the table each journal entry falls into by checking whether the entry contains the specific event it's interested in and whether the event happens alongside a squirrel incident. The loop then adds one to the correct box in the table.</p>
+<p>We now have the tools we need to compute individual correlations. The only step remaining is to find a correlation for every type of event that was recorded and see whether anything stands out.</p>
+<h3>Array loops</h3>
+<p>In the <code>tableFor</code> function, there’s a loop like this:</p>
+<pre>for (let i = 0; i < JOURNAL.length; i++) {
+  let entry = JOURNAL[i];
+  // Do something with entry
+}</pre>
+<p>This kind of loop is common in classical JavaScript-going over arrays one element at a time is something that comes up a lot, and to do that you'd run a counter over the length of the array and pick out each element in turn.</p>
+<p>There is a simpler way to write such loops in modern JavaScript.</p>
+<pre>for (let entry of JOURNAL) {
+  console.log(`${entry.events.length} events.`);
+}
+</pre>
+<p>When a <code>for</code> loop looks like this, with the word <code>of</code> after a variable definition, it will loop over the elements of the value given after <code>of</code>. This works not only for arrays but also for strings and some other data structures. We'll discuss how it works in <a href="/06_object.html">Chapter 6</a>.</p>
+<h3>The final analysis</h3>
+<p>We need to compute a correlation for every type of event that occurs in the data set. To do that, we first need to <i>find</i> every type of event.</p>
+<pre>function journalEvents(journal) {
+  let events = [];
+  for (let entry of journal) {
+    for (let event of entry.events) {
+      if (!events.includes(event)) {
+        events.push(event);
+      }
+    }
+  }
+  return events;
+}
+
+console.log(journalEvents(JOURNAL));
+// -> ["carrot", "exercise", "weekend", "bread", ...]</pre>
+<p>By going over all the events and adding those that aren't already in there to the <code>events</code> array, the function collects every type of event.</p>
+<p>Using that, we can see all the correlations.</p>
+<pre>for (let event of journalEvents(JOURNAL)) {
+  console.log(event + ":", phi(tableFor(event, JOURNAL)));
+}
+// → carrot:   0.0140970969
+// → exercise: 0.0685994341
+// → weekend:  0.1371988681
+// → bread:   -0.0757554019
+// → pudding: -0.0648203724
+// and so on...
+</pre>
+<p>Aha! There are two factors with a correlation that's clearly stronger than the others. Eating peanuts has a strong positive effect on the chance of turning into a squirrel, whereas brushing his teeth has a significant negative effect.</p>
+<p>Interesting. Let's try something.</p>
+<pre>for (let entry of JOURNAL) {
+  if (entry.events.includes("peanuts") &&
+     !entry.events.includes("brushed teeth")) {
+    entry.events.push("peanut teeth");
+  }
+}
+console.log(phi(tableFor("peanut teeth", JOURNAL)));
+// -> 1</pre>
+<p>That's a strong result. The phenomenon occurs precisely when Jacques eats peanuts and fails to brush his teeth. If only he weren't such a slob about dental hygiene, he'd have never even noticed his affliction.</p>
+<p>Knowing this, Jacques stops eating peanuts altogether and finds that his transformations don't come back.</p>
+<p>For a few years, things go great for Jacques. But at some point he loses his job. Because he lives in a nasty country where having no job means having no medical services, he is forced to take employment with a circus where he performs as <i>The Incredible Squirrelman</i>, stuffing his mouth with peanut butter before every show.</p>
+<p>One day, fed up with this pitiful existence, Jacques fails to change back into his human form, hops through a crack in the circus tent, and vanishes into the forest. He is never seen again.</p>
+<h3>Further arrayology</h3>
+<p>Before finishing the chapter, I want to introduce you to a few more object-related concepts. I'll start by introducing some generally useful array methods.</p>
 
 <h3 id="exercise_deep_compare">Deep comparison</h3>
 </body>
