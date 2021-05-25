@@ -41,7 +41,7 @@ console.log(listOfNumbers[2 - 1]);
 <p>So if you know that the property you are interested in is called color, you say <code>value.color</code>. If you want to extract the property named by the value held in the binding <code>i</code>, you say <code>value[i]</code>. Property names are strings. They can be any string, but the dot notation works only with names that look like valid binding names. So if you want to access a property named 2 or John Doe, you must use square brackets: <code>value[2]</code> or <code>value["John Doe"]</code>.</p>
 <p>The elements in an array are stored as the array's properties, using numbers as property names. Because you can't use the dot notation with numbers and usually want to use a binding that holds the index anyway, you have to use the bracket notation to get at them.</p>
 <p>The <code>length</code> property of an array tells us how many elements it has. This property name is a valid binding name, and we know its name in advance, so to find the length of an array, you typically write <code>array.length</code> because that’s easier to write than <code>array["length"]</code>.</p>
-<h3>Methods</h3>
+<h3 id="array_methods">Methods</h3>
 <p>Both string and array values contain, in addition to the <code>length</code> property, a number of properties that hold function values.</p>
 <pre>let doh = "Doh";
 console.log(typeof doh.toUpperCase);
@@ -269,6 +269,43 @@ console.log(phi(tableFor("peanut teeth", JOURNAL)));
 <p>One day, fed up with this pitiful existence, Jacques fails to change back into his human form, hops through a crack in the circus tent, and vanishes into the forest. He is never seen again.</p>
 <h3>Further arrayology</h3>
 <p>Before finishing the chapter, I want to introduce you to a few more object-related concepts. I'll start by introducing some generally useful array methods.</p>
+<p>We saw <code>push</code> and <code>pop</code>, which add and remove elements at the end of an array, <a href="/04_data.html#array_methods">earlier</a> in this chapter. The corresponding methods for adding and removing things at the start of an array are called <code>unshift</code> and <code>shift</code>.</p>
+<pre>let todoList = [];
+function remember(task) {
+  todoList.push(task);
+}
+function getTask() {
+  return todoList.shift();
+}
+function rememberUrgently(task) {
+  todoList.unshift(task);
+}
+</pre>
+<p>That program manages a queue of tasks. You add tasks to the end of the queue by calling <code>remember("groceries")</code>, and when you're ready to do something, you call <code>getTask()</code> to get (and remove) the front item from the queue. The <code>rememberUrgently</code> function also adds a task but adds it to the front instead of the back of the queue.</p>
+<p>To search for a specific value, arrays provide an <code>indexOf</code> method. The method searches through the array from the start to the end and returns the index at which the requested value was found-or -1 if it wasn't found. To search from the end instead of the start, there's a similar method called <code>lastIndexOf</code>.</p>
+<pre>console.log([1, 2, 3, 2, 1].indexOf(2));
+// -> 1
+console.log([1, 2, 3, 2, 1].lastIndexOf(2));
+// -> 3</pre>
+<p>Both <code>indexOf</code> and <code>lastIndexOf</code> take an optional second argument that indicates where to start searching.</p>
+<p>Another fundamental array method is <code>slice</code>, which takes start and end indices and returns an array that has only the elements between them. The start index is inclusive, the end index exclusive.</p>
+<pre>console.log([0, 1, 2, 3, 4].slice(2, 4));
+// -> [2, 3]
+console.log([0, 1, 2, 3, 4].slice(2));
+// -> [2, 3, 4]</pre>
+<p>When the end index is not given, <code>slice</code> will take all of the elements after the start index. You can also omit the start index to copy the entire array.</p>
+<p>The <code>concat</code> method can be used to glue arrays together to create a new array, similar to what the <code>+</code> operator does for strings.</p>
+<p>The following example shows both <code>concat</code> and <code>slice</code> in action. It takes an array and an index, and it returns a new array that is a copy of the original array with the element at the given index removed.</p>
+<pre>function remove(array, index) {
+  return array.slice(0, index)
+    .concat(array.slice(index + 1));
+}
+console.log(remove(["a", "b", "c", "d", "e"], 2));
+// -> ["a", "b", "d", "e"]
+</pre>
+<p>If you pass concat an argument that is not an array, that value will be added to the new array as if it were a one-element array.</p>
+<h3>Strings and their properties</h3>
+
 
 <h3 id="exercise_deep_compare">Deep comparison</h3>
 </body>
