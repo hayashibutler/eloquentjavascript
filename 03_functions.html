@@ -118,7 +118,7 @@ const square2 = x => x * x;</pre>
 };
 </pre>
 <p>There’s no deep reason to have both arrow functions and <code>function</code> expressions in the language. Apart from a minor detail, which we’ll discuss in <a href="/06_object.html">Chapter 6</a>, they do the same thing. Arrow functions were added in 2015, mostly to make it possible to write small function expressions in a less verbose way. We’ll be using them a lot in <a href="/05_higher_order.html">Chapter 5</a>.</p>
-<h3>The call stack</h3>
+<h3 id="stack">The call stack</h3>
 <p>The way control flows through functions is somewhat involved. Let’s take a closer look at it. Here is a simple program that makes a few function calls:</p>
 <pre>function greet(who) {
   console.log("Hello " + who);

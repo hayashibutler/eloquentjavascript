@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>chap 4 Data</title>
+	<title>chap 4 - Data</title>
 </head>
 <body>
 <h4>Chapter 4</h4>
@@ -33,9 +33,154 @@ console.log(listOfNumbers[2 - 1]);
 <p>The notation for getting at the elements inside an array also uses square brackets. A pair of square brackets immediately after an expression, with another expression inside of them, will look up the element in the left-hand expression that corresponds to the <i>index</i> given by the expression in the brackets.</p>
 <p>The first index of an array is zero, not one. So the first element is retrieved with <code>listOfNumbers[0]</code>. Zero-based counting has a long tradition in technology and in certain ways makes a lot of sense, but it takes some getting used to. Think of the index as the amount of items to skip, counting from the start of the array.</p>
 <h3>Properties</h3>
-<p>We’ve seen a few suspicious-looking expressions like <code>myString.length</code> (to get the length of a string) and <code>Math.max</code> (the maximum function) in past chapters. These are expressions that access a property of some value. In the first case, we access the <code>length</code> property of the value in <code>myString</code>. In the second, we access the property named <code>max</code> in the <code>Math</code> object (which is a collection of mathematics-related constants and functions).</p>
+<p>We've seen a few suspicious-looking expressions like <code>myString.length</code> (to get the length of a string) and <code>Math.max</code> (the maximum function) in past chapters. These are expressions that access a property of some value. In the first case, we access the <code>length</code> property of the value in <code>myString</code>. In the second, we access the property named <code>max</code> in the <code>Math</code> object (which is a collection of mathematics-related constants and functions).</p>
 <p>Almost all JavaScript values have properties. The exceptions are null and undefined. If you try to access a property on one of these nonvalues, you get an error.</p>
 <pre>null.length;
-// → TypeError: null has no properties</pre>
+// -> TypeError: null has no properties</pre>
+<p>The two main ways to access properties in JavaScript are with a dot and with square brackets. Both <code>value.x</code> and <code>value[x]</code> access a property on <code>value</code>-but not necessarily the same property. The difference is in how <code>x</code> is interpreted. When using a dot, the word after the dot is the literal name of the property. When using square brackets, the expression between the brackets is evaluated to get the property name. Whereas <code>value.x</code> fetches the property of <code>value</code> named “x”, <code>value[x]</code> tries to evaluate the expression <code>x</code> and uses the result, converted to a string, as the property name.</p>
+<p>So if you know that the property you are interested in is called color, you say <code>value.color</code>. If you want to extract the property named by the value held in the binding <code>i</code>, you say <code>value[i]</code>. Property names are strings. They can be any string, but the dot notation works only with names that look like valid binding names. So if you want to access a property named 2 or John Doe, you must use square brackets: <code>value[2]</code> or <code>value["John Doe"]</code>.</p>
+<p>The elements in an array are stored as the array's properties, using numbers as property names. Because you can't use the dot notation with numbers and usually want to use a binding that holds the index anyway, you have to use the bracket notation to get at them.</p>
+<p>The <code>length</code> property of an array tells us how many elements it has. This property name is a valid binding name, and we know its name in advance, so to find the length of an array, you typically write <code>array.length</code> because that’s easier to write than <code>array["length"]</code>.</p>
+<h3>Methods</h3>
+<p>Both string and array values contain, in addition to the <code>length</code> property, a number of properties that hold function values.</p>
+<pre>let doh = "Doh";
+console.log(typeof doh.toUpperCase);
+// -> function
+console.log(doh.toUpperCase());
+// -> DOH</pre>
+<p>Every string has a <code>toUpperCase</code> property. When called, it will return a copy of the string in which all letters have been converted to uppercase. There is also <code>toLowerCase</code>, going the other way.</p>
+<p>Interestingly, even though the call to toUpperCase does not pass any arguments, the function somehow has access to the string "Doh", the value whose property we called. How this works is described in <a href="/06_object.html#obj_methods">Chapter 6</a>.</p>
+<p>Properties that contain functions are generally called <i>methods</i> of the value they belong to, as in "<code>toUpperCase</code> is a method of a string".</p>
+<p>This example demonstrates two methods you can use to manipulate arrays:</p>
+<pre>let sequence = [1, 2, 3];
+sequence.push(4);
+sequence.push(5);
+console.log(sequence);
+// -> [1, 2, 3, 4, 5]
+console.log(sequence.pop());
+// -> 5
+console.log(sequence);
+// -> [1, 2, 3, 4]
+</pre>
+<p>The <code>push</code> method adds values to the end of an array, and the <code>pop</code> method does the opposite, removing the last value in the array and returning it.</p>
+<p>These somewhat silly names are the traditional terms for operations on a <i>stack</i>. A stack, in programming, is a data structure that allows you to push values into it and pop them out again in the opposite order so that the thing that was added last is removed first. These are common in programming—you might remember the function call stack from <a href="/03_functions.html#stack">the previous chapter</a>, which is an instance of the same idea.</p>
+<h3>Objects</h3>
+<p>Back to the weresquirrel. A set of daily log entries can be represented as an array. But the entries do not consist of just a number or a string-each entry needs to store a list of activities and a Boolean value that indicates whether Jacques turned into a squirrel or not. Ideally, we would like to group these together into a single value and then put those grouped values into an array of log entries.</p>
+<pre>let day1 = {
+  squirrel: false,
+  events: ["work", "touched tree", "pizza", "running"]
+};
+console.log(day1.squirrel);
+// → false
+console.log(day1.wolf);
+// → undefined
+day1.wolf = false;
+console.log(day1.wolf);
+// → false
+</pre>
+<p>Inside the braces, there is a list of properties separated by commas. Each property has a name followed by a colon and a value. When an object is written over multiple lines, indenting it like in the example helps with readability. Properties whose names aren't valid binding names or valid numbers have to be quoted.</p>
+<pre>let descriptions = {
+  work: "Went to work",
+  "touched tree": "Touched a tree"
+};</pre>
+<p>This means that braces have <i>two</i> meanings in JavaScript. At the start of a statement, they start a block of statements. In any other position, they describe an object. Fortunately, it is rarely useful to start a statement with an object in braces, so the ambiguity between these two is not much of a problem.</p>
+<p>Reading a property that doesn't exist will give you the value <code>undefined</code>.</p>
+<p>It is possible to assign a value to a property expression with the <code>=</code> operator. This will replace the property's value if it already existed or create a new property on the object if it didn't.</p>
+<p>To briefly return to our tentacle model of bindings-property bindings are similar. They <i>grasp</i> values, but other bindings and properties might be holding onto those same values. You may think of objects as octopuses with any number of tentacles, each of which has a name tattooed on it.</p>
+<p>The <code>delete</code> operator cuts off a tentacle from such an octopus. It is a unary operator that, when applied to an object property, will remove the named property from the object. This is not a common thing to do, but it is possible.</p>
+<pre>let anObject = {left: 1, right: 2};
+console.log(anObject.left);
+// -> 1
+delete anObject.left;
+console.log(anObject.left);
+// -> undefined
+console.log("left" in anObject);
+// -> false
+console.log("right" in anObject);
+// -> true</pre>
+<p>The binary <code>in</code> operator, when applied to a string and an object, tells you whether that object has a property with that name. The difference between setting a property to <code>undefined</code> and actually deleting it is that, in the first case, the object still has the property (it just doesn’t have a very interesting value), whereas in the second case the property is no longer present and <code>in</code> will return <code>false</code>.</p>
+<p>To find out what properties an object has, you can use the <code>Object.keys</code> function. You give it an object, and it returns an array of strings-the object's property names.</p>
+<pre>console.log(Object.keys({x: 0, y: 0, z: 2}));
+// -> ["x", "y", "z"]
+</pre>
+<p>There’s an <code>Object.assign</code> function that copies all properties from one object into another.</p>
+<pre>let objectA = {a: 1, b: 2};
+Object.assign(objectA, {b: 3, c: 4});
+console.log(objectA);
+// -> {a: 1, b: 3, c: 4}</pre>
+<p>Arrays, then, are just a kind of object specialized for storing sequences of things. If you evaluate <code>typeof []</code>, it produces <code>"object"</code>. You can see them as long, flat octopuses with all their tentacles in a neat row, labeled with numbers.</p>
+<p>We will represent the journal that Jacques keeps as an array of objects.</p>
+<pre>let journal = [
+  {events: ["work", "touched tree", "pizza",
+            "running", "television"],
+   squirrel: false},
+  {events: ["work", "ice cream", "cauliflower",
+            "lasagna", "touched tree", "brushed teeth"],
+   squirrel: false},
+  {events: ["weekend", "cycling", "break", "peanuts",
+            "beer"],
+   squirrel: true},
+  /* and so on... */
+];</pre>
+<h3>Mutability</h3>
+<p>We will get to actual programming real soon now. First there's one more piece of theory to understand.</p>
+<p>We saw that object values can be modified. The types of values discussed in earlier chapters, such as numbers, strings, and Booleans, are all <i>immutable</i>-it is impossible to change values of those types. You can combine them and derive new values from them, but when you take a specific string value, that value will always remain the same. The text inside it cannot be changed. If you have a string that contains <code>"cat"</code>, it is not possible for other code to change a character in your string to make it spell <code>"rat"</code>.</p>
+<p>Objects work differently. You <i>can</i> change their properties, causing a single object value to have different content at different times.</p>
+<p>When we have two numbers, 120 and 120, we can consider them precisely the same number, whether or not they refer to the same physical bits. With objects, there is a difference between having two references to the same object and having two different objects that contain the same properties. Consider the following code:</p>
+<pre>let object1 = {value: 10};
+let object2 = object1;
+let object3 = {value: 10};
+
+console.log(object1 == object2);
+// → true
+console.log(object1 == object3);
+// → false
+
+object1.value = 15;
+console.log(object2.value);
+// → 15
+console.log(object3.value);
+// → 10</pre>
+<p>The <code>object1</code> and <code>object2</code> bindings grasp the <i>same</i> object, which is why changing <code>object1</code> also changes the value of <code>object2</code>. They are said to have the same <i>identity</i>. The binding <code>object3</code> points to a different object, which initially contains the same properties as <code>object1</code> but lives a separate life.</p>
+<p>Bindings can also be changeable or constant, but this is separate from the way their values behave. Even though number values don't change, you can use a <code>let</code> binding to keep track of a changing number by changing the value the binding points at. Similarly, though a <code>const</code> binding to an object can itself not be changed and will continue to point at the same object, the <i>contents</i> of that object might change.</p>
+<pre>const score = {visitors: 0, home: 0};
+// This is okay
+score.visitors = 1;
+// This isn't allowed
+score = {visitors: 1, home: 1};</pre>
+<p>When you compare objects with JavaScript's <code>==</code> operator, it compares by identity: it will produce <code>true</code> only if both objects are precisely the same value. Comparing different objects will return <code>false</code>, even if they have identical properties. There is no “deep” comparison operation built into JavaScript, which compares objects by contents, but it is possible to write it yourself (which is one of the <a href="/04_data.html#exercise_deep_compare">exercises</a> at the end of this chapter).</p>
+<h3>The lycanthrope's log</h3>
+<p>So, Jacques starts up his JavaScript interpreter and sets up the environment he needs to keep his journal.</p>
+<pre>let journal = [];
+
+function addEntry(events, squirrel) {
+  journal.push({events, squirrel});
+}</pre>
+<p>Note that the object added to the journal looks a little odd. Instead of declaring properties like <code>events: events</code>, it just gives a property name. This is shorthand that means the same thing-if a property name in brace notation isn't followed by a value, its value is taken from the binding with the same name.</p>
+<p>So then, every evening at 10 p.m.-or sometimes the next morning, after climbing down from the top shelf of his bookcase-Jacques records the day.</p>
+<pre>addEntry(["work", "touched tree", "pizza", "running",
+          "television"], false);
+addEntry(["work", "ice cream", "cauliflower", "lasagna",
+          "touched tree", "brushed teeth"], false);
+addEntry(["weekend", "cycling", "break", "peanuts",
+          "beer"], true);</pre>
+<p>Once he has enough data points, he intends to use statistics to find out which of these events may be related to the squirrelifications.</p>
+<p><i>Correlation</i> is a measure of dependence between statistical variables. A statistical variable is not quite the same as a programming variable. In statistics you typically have a set of <i>measurements</i>, and each variable is measured for every measurement. Correlation between variables is usually expressed as a value that ranges from -1 to 1. Zero correlation means the variables are not related. A correlation of one indicates that the two are perfectly related-if you know one, you also know the other. Negative one also means that the variables are perfectly related but that they are opposites-when one is true, the other is false.</p>
+<p>To compute the measure of correlation between two Boolean variables, we can use the <i>phi coefficient (ϕ)</i>. This is a formula whose input is a frequency table containing the number of times the different combinations of the variables were observed. The output of the formula is a number between -1 and 1 that describes the correlation.</p>
+<p>We could take the event of eating pizza and put that in a frequency table like this, where each number indicates the amount of times that combination occurred in our measurements:</p>
+<img src="/images/pizza-squirrel.svg">
+<p>If we call that table n, we can compute ϕ using the following formula:</p>
+<pre>
+ϕ =	
+n11n00 − n10n01
+√ n1•n0•n•1n•0
+</pre>
+<p>(If at this point you're putting the book down to focus on a terrible flashback to 10th grade math class-hold on! I do not intend to torture you with endless pages of cryptic notation-it's just this one formula for now. And even with this one, all we do is turn it into JavaScript.)</p>
+<p>The notation <i>n<sub>01</sub></i> indicates the number of measurements where the first variable (squirrelness) is false (0) and the second variable (pizza) is true (1). In the pizza table, <i>n<sub>09</sub></i> is 9.</p>
+<p>The value n<sub>1*</sub> refers to the sum of all measurements where the first variable is true, which is 5 in the example table. Likewise, n<sub>*0</sub> refers to the sum of the measurements where the second variable is false.</p>
+<p>So for the pizza table, the part above the division line (the dividend) would be 1×76−4×9 = 40, and the part below it (the divisor) would be the square root of 5×85×10×80, or √340000. This comes out to ϕ ≈ 0.069, which is tiny. Eating pizza does not appear to have influence on the transformations.</p>
+<h3>Computing correlation</h3>
+
+<h3 id="exercise_deep_compare">Deep comparison</h3>
 </body>
 </html>
