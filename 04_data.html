@@ -364,6 +364,34 @@ console.log(max(...numbers));
 console.log(["will", ...words, "understand"]);
 // -> ["will", "never", "fully", "understand"]</pre>
 <h3>The Math object</h3>
+<p>As we've seen, <code>Math</code> is a grab bag of number-related utility functions, such as <code>Math.max</code> (maximum), <code>Math.min</code> (minimum), and <code>Math.sqrt</code> (square root).</p>
+<p>The <code>Math</code> object is used as a container to group a bunch of related functionality. There is only one <code>Math</code> object, and it is almost never useful as a value. Rather, it provides a <i>namespace</i> so that all these functions and values do not have to be global bindings.</p>
+<p>Having too many global bindings "pollutes" the namespace. The more names have been taken, the more likely you are to accidentally overwrite the value of some existing binding. For example, it's not unlikely to want to name something max in one of your programs. Since JavaScript's built-in <code>max</code> function is tucked safely inside the <code>Math</code> object, we don't have to worry about overwriting it.</p>
+<p>Many languages will stop you, or at least warn you, when you are defining a binding with a name that is already taken. JavaScript does this for bindings you declared with <code>let</code> or <code>const</code> but-perversely-not for standard bindings nor for bindings declared with <code>var</code> or <code>function</code>.</p>
+<p>Back to the <code>Math</code> object. If you need to do trigonometry, <code>Math</code> can help. It contains <code>cos</code> (cosine), <code>sin</code> (sine), and <code>tan</code> (tangent), as well as their inverse functions, <code>acos</code>, <code>asin</code>, and <code>atan</code>, respectively. The number π (pi)-or at least the closest approximation that fits in a JavaScript number-is available as <code>Math.PI</code>. There is an old programming tradition of writing the names of constant values in all caps.</p>
+<pre>function randomPointOnCircle(radius) {
+  let angle = Math.random() * 2 * Math.PI;
+  return {x: radius * Math.cos(angle),
+          y: radius * Math.sin(angle)};
+}
+console.log(randomPointOnCircle(2));
+// -> {x: 0.3667, y: 1.966}</pre>
+<p>If sines and cosines are not something you are familiar with, don't worry. When they are used in this book, in <a href="/14_dom.html">Chapter 14</a>, I'll explain them.</p>
+<p>The previous example used <code>Math.random</code>. This is a function that returns a new pseudorandom number between zero (inclusive) and one (exclusive) every time you call it.</p>
+<pre>console.log(Math.random());
+// -> 0.36993729369714856
+console.log(Math.random());
+// -> 0.727367032552138
+console.log(Math.random());
+// -> 0.40180766698904335
+</pre>
+<p>Though computers are deterministic machines-they always react the same way if given the same input-it is possible to have them produce numbers that appear random. To do that, the machine keeps some hidden value, and whenever you ask for a new random number, it performs complicated computations on this hidden value to create a new value. It stores a new value and returns some number derived from it. That way, it can produce ever new, hard-to-predict numbers in a way that seems random.</p>
+<p>If we want a whole random number instead of a fractional one, we can use <code>Math.floor</code> (which rounds down to the nearest whole number) on the result of <code>Math.random</code>.</p>
+<pre>console.log(Math.floor(Math.random() * 10));
+// -> 2</pre>
+<p>Multiplying the random number by 10 gives us a number greater than or equal to 0 and below 10. Since <code>Math.floor</code> rounds down, this expression will produce, with equal chance, any number from 0 through 9.</p>
+<p>There are also the functions <code>Math.ceil</code> (for “ceiling”, which rounds up to a whole number), <code>Math.round</code> (to the nearest whole number), and <code>Math.abs</code>, which takes the absolute value of a number, meaning it negates negative values but leaves positive ones as they are.</p>
+<h3>Destructuring</h3>
 
 <h3 id="exercise_deep_compare">Deep comparison</h3>
 </body>
