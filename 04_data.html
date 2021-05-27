@@ -392,7 +392,53 @@ console.log(Math.random());
 <p>Multiplying the random number by 10 gives us a number greater than or equal to 0 and below 10. Since <code>Math.floor</code> rounds down, this expression will produce, with equal chance, any number from 0 through 9.</p>
 <p>There are also the functions <code>Math.ceil</code> (for “ceiling”, which rounds up to a whole number), <code>Math.round</code> (to the nearest whole number), and <code>Math.abs</code>, which takes the absolute value of a number, meaning it negates negative values but leaves positive ones as they are.</p>
 <h3>Destructuring</h3>
+<P>Let's go back to the phi function for a moment.</P>
+<pre>function phi(table) {
+  return (table[3] * table[0] - table[2] * table[1]) /
+    Math.sqrt((table[2] + table[3]) *
+              (table[0] + table[1]) *
+              (table[1] + table[3]) *
+              (table[0] + table[2]));
+}</pre>
+<p>One of the reasons this function is awkward to read is that we have a binding pointing at our array, but we’d much prefer to have bindings for the <i>elements</i> of the array, that is, <code>let n00 = table[0]</code> and so on. Fortunately, there is a succinct way to do this in JavaScript.</p>
+<pre>function phi([n00, n01, n10, n11]) {
+  return (n11 * n00 - n10 * n01) /
+    Math.sqrt((n10 + n11) * (n00 + n01) *
+              (n01 + n11) * (n00 + n10));
+}</pre>
+<p>This also works for bindings created with <code>let</code>, <code>var</code>, or <code>const</code>. If you know the value you are binding is an array, you can use square brackets to "look inside" of the value, binding its contents.</p>
+<p>A similar trick works for objects, using braces instead of square brackets.</p>
+<pre>let {name} = {name: "Faraji", age: 23};
+console.log(name);
+// -> Faraji
+</pre>
+<p>Note that if you try to destructure <code>null</code> or <code>undefined</code>, you get an error, much as you would if you directly try to access a property of those values.</p>
+<h3>JSON</h3>
+<p>Because properties only grasp their value, rather than contain it, objects and arrays are stored in the computer's memory as sequences of bits holding the <i>addresses</i>-the place in memory-of their contents. So an array with another array inside of it consists of (at least) one memory region for the inner array, and another for the outer array, containing (among other things) a binary number that represents the position of the inner array.</p>
+<p>If you want to save data in a file for later or send it to another computer over the network, you have to somehow convert these tangles of memory addresses to a description that can be stored or sent. You <i>could</i> send over your entire computer memory along with the address of the value you’re interested in, I suppose, but that doesn’t seem like the best approach.</p>
+<p>What we can do is <i>serialize</i> the data. That means it is converted into a flat description. A popular serialization format is called <i>JSON</i> (pronounced "Jason"), which stands for JavaScript Object Notation. It is widely used as a data storage and communication format on the Web, even in languages other than JavaScript.</p>
+<p>JSON looks similar to JavaScript's way of writing arrays and objects, with a few restrictions. All property names have to be surrounded by double quotes, and only simple data expressions are allowed-no function calls, bindings, or anything that involves actual computation. Comments are not allowed in JSON.</p>
+<p>A journal entry might look like this when represented as JSON data:</p>
+<pre>{
+  "squirrel": false,
+  "events": ["work", "touched tree", "pizza", "running"]
+}</pre>
+<p>JavaScript gives us the functions <code>JSON.stringify</code> and <code>JSON.parse</code> to convert data to and from this format. The first takes a JavaScript value and returns a JSON-encoded string. The second takes such a string and converts it to the value it encodes.</p>
+<pre>let string = JSON.stringify({squirrel: false,
+                             events: ["weekend"]});
+console.log(string);
+// -> {"squirrel":false,"events":["weekend"]}
+console.log(JSON.parse(string).events);
+// -> ["weekend"]</pre>
+<h3>Summary</h3>
+<p>Objects and arrays (which are a specific kind of object) provide ways to group several values into a single value. Conceptually, this allows us to put a bunch of related things in a bag and run around with the bag, instead of wrapping our arms around all of the individual things and trying to hold on to them separately.</p>
+<p>Most values in JavaScript have properties, the exceptions being <code>null</code> and <code>undefined</code>. Properties are accessed using <code>value.prop</code> or <code>value["prop"]</code>. Objects tend to use names for their properties and store more or less a fixed set of them. Arrays, on the other hand, usually contain varying amounts of conceptually identical values and use numbers (starting from 0) as the names of their properties.</p>
+<p>There <i>are</i> some named properties in arrays, such as <code>length</code> and a number of methods. Methods are functions that live in properties and (usually) act on the value they are a property of.</p>
+<p>You can iterate over arrays using a special kind of <code>for</code> loop-<code>for (let element of array)</code>.</p>
+<h3>Exercises</h3>
+<h4>pThe sum of a range</h4>
+<p>The <a href="/00_intro.html">introduction</a> of this book alluded to the following as a nice way to compute the sum of a range of numbers:</p>
 
-<h3 id="exercise_deep_compare">Deep comparison</h3>
+<h4 id="exercise_deep_compare">Deep comparison</h4>
 </body>
 </html>
