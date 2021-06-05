@@ -436,9 +436,129 @@ console.log(JSON.parse(string).events);
 <p>There <i>are</i> some named properties in arrays, such as <code>length</code> and a number of methods. Methods are functions that live in properties and (usually) act on the value they are a property of.</p>
 <p>You can iterate over arrays using a special kind of <code>for</code> loop-<code>for (let element of array)</code>.</p>
 <h3>Exercises</h3>
-<h4>pThe sum of a range</h4>
+<h4>The sum of a range</h4>
 <p>The <a href="/00_intro.html">introduction</a> of this book alluded to the following as a nice way to compute the sum of a range of numbers:</p>
+<pre>console.log(sum(range(1, 10)));</pre>
+<p>Write a <code>range</code> function that takes two arguments, <code>start</code> and <code>end</code>, and returns an array containing all the numbers from <code>start</code> up to (and including) <code>end</code>.</p>
+<p>Next, write a <code>sum</code> function that takes an array of numbers and returns the sum of these numbers. Run the example program and see whether it does indeed return 55.</p>
+<p>As a bonus assignment, modify your <code>range</code> function to take an optional third argument that indicates the “step” value used when building the array. If no step is given, the elements go up by increments of one, corresponding to the old behavior. The function call <code>range(1, 10, 2)</code> should return <code>[1, 3, 5, 7, 9]</code>. Make sure it also works with negative step values so that <code>range(5, 2, -1)</code> produces <code>[5, 4, 3, 2]</code>.</p>
+<pre>// Your code here.
 
+console.log(range(1, 10));
+// → [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+console.log(range(5, 2, -1));
+// → [5, 4, 3, 2]
+console.log(sum(range(1, 10)));
+// → 55</pre>
+
+<p>Giải</p>
+<pre>
+let array = [];
+function range (start, end, step = start < end ? 1:-1) {
+	if (step > 0) {
+		for (start; start < end +1; start++) {
+			array.push(start);
+		}
+	} else for (start; start > end-1; start--) {
+			array.push(start);
+	}
+	return array;
+	// console.log(array)
+}
+// console.log(range(1,4))
+function sum(array) {
+	let total = 0;
+	for ( let i of array) {
+		total += i;
+	}
+	// return total;
+	console.log(total)
+}
+range(1,5)
+sum(range(1,5))</pre>
+<h4>Reversing an array</h4>
+<p>Arrays have a <code>reverse</code> method that changes the array by inverting the order in which its elements appear. For this exercise, write two functions, <code>reverseArray</code> and <code>reverseArrayInPlace</code>. The first, <code>reverseArray</code>, takes an array as argument and produces a new array that has the same elements in the inverse order. The second, <code>reverseArrayInPlace</code>, does what the <code>reverse</code> method does: it modifies the array given as argument by reversing its elements. Neither may use the standard <code>reverse</code> method.</p>
+<p>Thinking back to the notes about side effects and pure functions in the <a href="/03_functions.html#pure">previous chapter</a>, which variant do you expect to be useful in more situations? Which one runs faster?</p>
+<pre>
+console.log(reverseArray(["A", "B", "C"]));
+// → ["C", "B", "A"];
+let arrayValue = [1, 2, 3, 4, 5];
+reverseArrayInPlace(arrayValue);
+console.log(arrayValue);
+// → [5, 4, 3, 2, 1]</pre>
+<p>Giải</p>
+<pre>let array = [1,2,3,4,5,6,7]
+for (let i = 0; i < Math.floor(array.length / 2); i++) {
+    let old = array[i];
+	 array[i] = array[array.length - 1 - i];
+	 array[array.length - 1 - i] = old;
+	}
+  console.log(array)</pre>
+ <h4>A list</h4>
+ <p>Objects, as generic blobs of values, can be used to build all sorts of data structures. A common data structure is the <i>list</i> (not to be confused with array). A list is a nested set of objects, with the first object holding a reference to the second, the second to the third, and so on.</p>
+ <pre>let list = {
+  value: 1,
+  rest: {
+    value: 2,
+    rest: {
+      value: 3,
+      rest: null
+    }
+  }
+};</pre>
+<p>The resulting objects form a chain, like this:</p>
+<img src="./images/linked-list.svg">
+<p>A nice thing about lists is that they can share parts of their structure. For example, if I create two new values <code>{value: 0, rest: list}</code> and <code>{value: -1, rest: list}</code> (with <code>list</code> referring to the binding defined earlier), they are both independent lists, but they share the structure that makes up their last three elements. The original list is also still a valid three-element list.</p>
+<p>Write a function <code>arrayToList</code> that builds up a list structure like the one shown when given <code>[1, 2, 3]</code> as argument. Also write a <code>listToArray</code> function that produces an array from a list. Then add a helper function <code>prepend</code>, which takes an element and a list and creates a new list that adds the element to the front of the input list, and <code>nth</code>, which takes a list and a number and returns the element at the given position in the list (with zero referring to the first element) or <code>undefined</code> when there is no such element.</p>
+<p>If you haven't already, also write a recursive version of <code>nth</code>.</p>
+<pre>
+console.log(arrayToList([10, 20]));
+// → {value: 10, rest: {value: 20, rest: null}}
+console.log(listToArray(arrayToList([10, 20, 30])));
+// → [10, 20, 30]
+console.log(prepend(10, prepend(20, null)));
+// → {value: 10, rest: {value: 20, rest: null}}
+console.log(nth(arrayToList([10, 20, 30]), 1));
+// → 20</pre>
+<p>Giải</p>
+<pre>function arrayToList(array) {
+  let list = null;
+  for (let i = array.length - 1; i >= 0; i--) {
+    list = {value: array[i], rest: list};
+  }
+  return list;
+}
+
+function listToArray(list) {
+  let array = [];
+  for (let node = list; node; node = node.rest) {
+    array.push(node.value);
+  }
+  return array;
+}
+
+function prepend(value, list) {
+  return {value, rest: list};
+}
+
+function nth(list, n) {
+  if (!list) return undefined;
+  else if (n == 0) return list.value;
+  else return nth(list.rest, n - 1);
+}
+</pre>
 <h4 id="exercise_deep_compare">Deep comparison</h4>
+<p>The <code>==</code> operator compares objects by identity. But sometimes you’d prefer to compare the values of their actual properties.</p>
+<p>Write a function <code>deepEqual</code> that takes two values and returns true only if they are the same value or are objects with the same properties, where the values of the properties are equal when compared with a recursive call to <code>deepEqual</code>.</p>
+<p>To find out whether values should be compared directly (use the <code>===</code> operator for that) or have their properties compared, you can use the <code>typeof</code> operator. If it produces <code>"object"</code> for both values, you should do a deep comparison. But you have to take one silly exception into account: because of a historical accident, <code>typeof</code> null also produces <code>"object"</code>.</p>
+<p>The <code>Object.keys</code> function will be useful when you need to go over the properties of objects to compare them.</p>
+<pre>let obj = {here: {is: "an"}, object: 2};
+console.log(deepEqual(obj, obj));
+// → true
+console.log(deepEqual(obj, {here: 1, object: 2}));
+// → false
+console.log(deepEqual(obj, {here: {is: "an"}, object: 2}));
+// → true
+</pre>
 </body>
 </html>
