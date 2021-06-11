@@ -68,6 +68,247 @@ console.log(labels);
 // → ["Unit 1", "Unit 2", "Unit 3", "Unit 4", "Unit 5"]</pre>
 <p>This is structured a little like a <code>for</code> loop-it first describes the kind of loop and then provides a body. However, the body is now written as a function value, which is wrapped in the parentheses of the call to <code>repeat</code>. This is why it has to be closed with the closing brace <i>and</i> closing parenthesis. In cases like this example, where the body is a single small expression, you could also omit the braces and write the loop on a single line.</p>
 <h3>Higher-order functions</h3>
+<p>Functions that operate on other functions, either by taking them as arguments or by returning them, are called <i>higher-order functions</i>. Since we have already seen that functions are regular values, there is nothing particularly remarkable about the fact that such functions exist. The term comes from mathematics, where the distinction between functions and other values is taken more seriously.</p>
+<p>Higher-order functions allow us to abstract over <i>actions</i>, not just values. They come in several forms. For example, we can have functions that create new functions.</p>
+<pre>function greaterThan(n) {
+  return m => m > n;
+}
+let greaterThan10 = greaterThan(10);
+console.log(greaterThan10(11));
+// → true
+</pre>
+<p>And we can have functions that change other functions.</p>
+<pre>function noisy(f) {
+  return (...args) => {
+    console.log("calling with", args);
+    let result = f(...args);
+    console.log("called with", args, ", returned", result);
+    return result;
+  };
+}
+noisy(Math.min)(3, 2, 1);
+// → calling with [3, 2, 1]
+// → called with [3, 2, 1] , returned 1</pre>
+<p>We can even write functions that provide new types of control flow.</p>
+<pre>function unless(test, then) {
+  if (!test) then();
+}
 
+repeat(3, n => {
+  unless(n % 2 == 1, () => {
+    console.log(n, "is even");
+  });
+});
+// → 0 is even
+// → 2 is even
+</pre>
+<p>There is a built-in array method, <code>forEach</code>, that provides something like a <code>for</code>/<code>of</code> loop as a higher-order function.</p>
+<pre>["A", "B"].forEach(l => console.log(l));
+// → A
+// → B</pre>
+<h3>Script data set</h3>
+<p>One area where higher-order functions shine is data processing. To process data, we'll need some actual data. This chapter will use a data set about scripts-writing systems such as Latin, Cyrillic, or Arabic.</p>
+<p>Remember Unicode from <a href="/01_values.html#unicode">Chapter 1</a>, the system that assigns a number to each character in written language? Most of these characters are associated with a specific script. The standard contains 140 different scripts-81 are still in use today, and 59 are historic.</p>
+<p>Though I can fluently read only Latin characters, I appreciate the fact that people are writing texts in at least 80 other writing systems, many of which I wouldn't even recognize. For example, here's a sample of Tamil handwriting:</p>
+<img src="/images/tamil.png">
+<p>The example data set contains some pieces of information about the 140 scripts defined in Unicode. It is available in the coding sandbox for this chapter as the <code>SCRIPTS</code> binding. The binding contains an array of objects, each of which describes a script.</p>
+<pre>{
+  name: "Coptic",
+  ranges: [[994, 1008], [11392, 11508], [11513, 11520]],
+  direction: "ltr",
+  year: -200,
+  living: false,
+  link: "https://en.wikipedia.org/wiki/Coptic_alphabet"
+}</pre>
+<p>Such an object tells us the name of the script, the Unicode ranges assigned to it, the direction in which it is written, the (approximate) origin time, whether it is still in use, and a link to more information. The direction may be <code>"ltr"</code> for left to right, <code>"rtl"</code> for right to left (the way Arabic and Hebrew text are written), or <code>"ttb"</code> for top to bottom (as with Mongolian writing).</p>
+<p>The <code>ranges</code> property contains an array of Unicode character ranges, each of which is a two-element array containing a lower bound and an upper bound. Any character codes within these ranges are assigned to the script. The lower bound is inclusive (code 994 is a Coptic character), and the upper bound is non-inclusive (code 1008 isn't).</p>
+<h3>Filtering arrays</h3>
+<p>To find the scripts in the data set that are still in use, the following function might be helpful. It filters out the elements in an array that don't pass a test.</p>
+<pre>function filter(array, test) {
+  let passed = [];
+  for (let element of array) {
+    if (test(element)) {
+      passed.push(element);
+    }
+  }
+  return passed;
+}
+
+console.log(filter(SCRIPTS, script => script.living));
+// → [{name: "Adlam", …}, …]</pre>
+<p>The function uses the argument named test, a function value, to fill a “gap” in the computation-the process of deciding which elements to collect.</p>
+<p>Note how the <code>filter</code> function, rather than deleting elements from the existing array, builds up a new array with only the elements that pass the test. This function is pure. It does not modify the array it is given.</p>
+<p>Like <code>forEach</code>, <code>filter</code> is a standard array method. The example defined the function only to show what it does internally. From now on, we’ll use it like this instead:</p>
+<pre>console.log(SCRIPTS.filter(s => s.direction == "ttb"));
+// → [{name: "Mongolian", …}, …]
+</pre>
+<h3>Transforming with map</h3>
+<p>Say we have an array of objects representing scripts, produced by filtering the <code>SCRIPTS</code> array somehow. But we want an array of names, which is easier to inspect.</p>
+<p>The <code>map</code> method transforms an array by applying a function to all of its elements and building a new array from the returned values. The new array will have the same length as the input array, but its content will have been <i>mapped</i> to a new form by the function.</p>
+<pre>function map(array, transform) {
+  let mapped = [];
+  for (let element of array) {
+    mapped.push(transform(element));
+  }
+  return mapped;
+}
+
+let rtlScripts = SCRIPTS.filter(s => s.direction == "rtl");
+console.log(map(rtlScripts, s => s.name));
+// → ["Adlam", "Arabic", "Imperial Aramaic", …]</pre>
+<p>Like <code>forEach</code> and <code>filter</code>, <code>map</code> is a standard array method.</p>
+<h3>Summarizing with reduce</h3>
+<p>Another common thing to do with arrays is to compute a single value from them. Our recurring example, summing a collection of numbers, is an instance of this. Another example is finding the script with the most characters.</p>
+<p>The higher-order operation that represents this pattern is called <i>reduce</i> (sometimes also called <i>fold</i>). It builds a value by repeatedly taking a single element from the array and combining it with the current value. When summing numbers, you'd start with the number zero and, for each element, add that to the sum.</p>
+<p>The parameters to <code>reduce</code> are, apart from the array, a combining function and a start value. This function is a little less straightforward than <code>filter</code> and <code>map</code>, so take a close look at it:</p>
+<pre>function reduce(array, combine, start) {
+  let current = start;
+  for (let element of array) {
+    current = combine(current, element);
+  }
+  return current;
+}
+
+console.log(reduce([1, 2, 3, 4], (a, b) => a + b, 0));
+// → 10</pre>
+<p>The standard array method <code>reduce</code>, which of course corresponds to this function, has an added convenience. If your array contains at least one element, you are allowed to leave off the <code>start</code> argument. The method will take the first element of the array as its start value and start reducing at the second element.</p>
+<pre>console.log([1, 2, 3, 4].reduce((a, b) => a + b));
+// → 10</pre>
+<p>To use <code>reduce</code> (twice) to find the script with the most characters, we can write something like this:</p>
+<pre>function characterCount(script) {
+  return script.ranges.reduce((count, [from, to]) => {
+    return count + (to - from);
+  }, 0);
+}
+
+console.log(SCRIPTS.reduce((a, b) => {
+  return characterCount(a) < characterCount(b) ? b : a;
+}));
+// → {name: "Han", …}</pre>
+<p>The <code>characterCount</code> function reduces the ranges assigned to a script by summing their sizes. Note the use of destructuring in the parameter list of the reducer function. The second call to <code>reduce</code> then uses this to find the largest script by repeatedly comparing two scripts and returning the larger one.</p>
+<p>The Han script has more than 89,000 characters assigned to it in the Unicode standard, making it by far the biggest writing system in the data set. Han is a script (sometimes) used for Chinese, Japanese, and Korean text. Those languages share a lot of characters, though they tend to write them differently. The (U.S.-based) Unicode Consortium decided to treat them as a single writing system to save character codes. This is called <i>Han unification</i> and still makes some people very angry.</p>
+<h3>Composability</h3>
+<p>Consider how we would have written the previous example (finding the biggest script) without higher-order functions. The code is not that much worse.</p>
+<pre>let biggest = null;
+for (let script of SCRIPTS) {
+  if (biggest == null ||
+      characterCount(biggest) < characterCount(script)) {
+    biggest = script;
+  }
+}
+console.log(biggest);
+// → {name: "Han", …}
+</pre>
+<p>There are a few more bindings, and the program is four lines longer. But it is still very readable.</p>
+<p>Higher-order functions start to shine when you need to compose operations. As an example, let's write code that finds the average year of origin for living and dead scripts in the data set.</p>
+<pre>function average(array) {
+  return array.reduce((a, b) => a + b) / array.length;
+}
+
+console.log(Math.round(average(
+  SCRIPTS.filter(s => s.living).map(s => s.year))));
+// → 1165
+console.log(Math.round(average(
+  SCRIPTS.filter(s => !s.living).map(s => s.year))));
+// → 204</pre>
+<p>So the dead scripts in Unicode are, on average, older than the living ones. This is not a terribly meaningful or surprising statistic. But I hope you'll agree that the code used to compute it isn't hard to read. You can see it as a pipeline: we start with all scripts, filter out the living (or dead) ones, take the years from those, average them, and round the result.</p>
+<p>You could definitely also write this computation as one big loop.</p>
+<pre>let total = 0, count = 0;
+for (let script of SCRIPTS) {
+  if (script.living) {
+    total += script.year;
+    count += 1;
+  }
+}
+console.log(Math.round(total / count));
+// → 1165</pre>
+<p>But it is harder to see what was being computed and how. And because intermediate results aren’t represented as coherent values, it’d be a lot more work to extract something like <code>average</code> into a separate function.</p>
+<p>In terms of what the computer is actually doing, these two approaches are also quite different. The first will build up new arrays when running <code>filter</code> and <code>map</code>, whereas the second computes only some numbers, doing less work. You can usually afford the readable approach, but if you’re processing huge arrays, and doing so many times, the less abstract style might be worth the extra speed.</p>
+<h3>Strings and character codes</h3>
+<p>One use of the data set would be figuring out what script a piece of text is using. Let's go through a program that does this.</p>
+<p>Remember that each script has an array of character code ranges associated with it. So given a character code, we could use a function like this to find the corresponding script (if any):</p>
+<pre>function characterScript(code) {
+  for (let script of SCRIPTS) {
+    if (script.ranges.some(([from, to]) => {
+      return code >= from && code < to;
+    })) {
+      return script;
+    }
+  }
+  return null;
+}
+
+console.log(characterScript(121));
+// → {name: "Latin", …}</pre>
+<p>The some method is another higher-order function. It takes a test function and tells you whether that function returns true for any of the elements in the array.</p>
+<p>But how do we get the character codes in a string?</p>
+<p>In <a href="/01_values.html"></a>Chapter 1 I mentioned that JavaScript strings are encoded as a sequence of 16-bit numbers. These are called code units. A Unicode character code was initially supposed to fit within such a unit (which gives you a little over 65,000 characters). When it became clear that wasn’t going to be enough, many people balked at the need to use more memory per character. To address these concerns, UTF-16, the format used by JavaScript strings, was invented. It describes most common characters using a single 16-bit code unit but uses a pair of two such units for others.</p>
+<p>UTF-16 is generally considered a bad idea today. It seems almost intentionally designed to invite mistakes. It's easy to write programs that pretend code units and characters are the same thing. And if your language doesn't use two-unit characters, that will appear to work just fine. But as soon as someone tries to use such a program with some less common Chinese characters, it breaks. Fortunately, with the advent of emoji, everybody has started using two-unit characters, and the burden of dealing with such problems is more fairly distributed.</p>
+<p>Unfortunately, obvious operations on JavaScript strings, such as getting their length through the <code>length</code> property and accessing their content using square brackets, deal only with code units.</p>
+<pre>// Two emoji characters, horse and shoe
+let horseShoe = "🐴👟";
+console.log(horseShoe.length);
+// → 4
+console.log(horseShoe[0]);
+// → (Invalid half-character)
+console.log(horseShoe.charCodeAt(0));
+// → 55357 (Code of the half-character)
+console.log(horseShoe.codePointAt(0));
+// → 128052 (Actual code for horse emoji)</pre>
+<p>JavaScript's <code>charCodeAt</code> method gives you a code unit, not a full character code. The <code>codePointAt</code> method, added later, does give a full Unicode character. So we could use that to get characters from a string. But the argument passed to <code>codePointAt</code> is still an index into the sequence of code units. So to run over all characters in a string, we'd still need to deal with the question of whether a character takes up one or two code units.</p>
+<p>In the previous chapter, I mentioned that a <code>for</code>/<code>of</code> loop can also be used on strings. Like <code>codePointAt</code>, this type of loop was introduced at a time where people were acutely aware of the problems with UTF-16. When you use it to loop over a string, it gives you real characters, not code units.</p>
+<pre>let roseDragon = "🌹🐉";
+for (let char of roseDragon) {
+  console.log(char);
+}
+// → 🌹
+// → 🐉</pre>
+<p>If you have a character (which will be a string of one or two code units), you can use <code>codePointAt(0)</code> to get its code.</p>
+<h3>Recognizing text</h3>
+<p>We have a <code>characterScript</code> function and a way to correctly loop over characters. The next step is to count the characters that belong to each script. The following counting abstraction will be useful there:</p>
+<pre>function countBy(items, groupName) {
+  let counts = [];
+  for (let item of items) {
+    let name = groupName(item);
+    let known = counts.findIndex(c => c.name == name);
+    if (known == -1) {
+      counts.push({name, count: 1});
+    } else {
+      counts[known].count++;
+    }
+  }
+  return counts;
+}
+
+console.log(countBy([1, 2, 3, 4, 5], n => n > 2));
+// → [{name: false, count: 2}, {name: true, count: 3}]</pre>
+<p>The <code>countBy</code> function expects a collection (anything that we can loop over with <code>for</code>/<code>of</code>) and a function that computes a group name for a given element. It returns an array of objects, each of which names a group and tells you the number of elements that were found in that group.</p>
+<p>It uses another array method-<code>findIndex</code>. This method is somewhat like <code>indexOf</code>, but instead of looking for a specific value, it finds the first value for which the given function returns true. Like <code>indexOf</code>, it returns -1 when no such element is found.</p>
+<p>Using <code>countBy</code>, we can write the function that tells us which scripts are used in a piece of text.</p>
+<pre>function textScripts(text) {
+  let scripts = countBy(text, char => {
+    let script = characterScript(char.codePointAt(0));
+    return script ? script.name : "none";
+  }).filter(({name}) => name != "none");
+
+  let total = scripts.reduce((n, {count}) => n + count, 0);
+  if (total == 0) return "No scripts found";
+
+  return scripts.map(({name, count}) => {
+    return `${Math.round(count * 100 / total)}% ${name}`;
+  }).join(", ");
+}
+
+console.log(textScripts('英国的狗说"woof", 俄罗斯的狗说"тяв"'));
+// -> 61% Han, 22% Latin, 17% Cyrillic</pre>
+<p>The function first counts the characters by name, using <code>characterScript</code> to assign them a name and falling back to the string <code>"none"</code> for characters that aren’t part of any script. The <code>filter</code> call drops the entry for <code>"none"</code> from the resulting array since we aren’t interested in those characters.</p>
+<p>To be able to compute percentages, we first need the total number of characters that belong to a script, which we can compute with <code>reduce</code>. If no such characters are found, the function returns a specific string. Otherwise, it transforms the counting entries into readable strings with <code>map</code> and then combines them with <code>join</code>.</p>
+<h3>Summary</h3>
+<p>Being able to pass function values to other functions is a deeply useful aspect of JavaScript. It allows us to write functions that model computations with “gaps” in them. The code that calls these functions can fill in the gaps by providing function values.</p>
+<p>Arrays provide a number of useful higher-order methods. You can use <code>forEach</code> to loop over the elements in an array. The <code>filter</code> method returns a new array containing only the elements that pass the predicate function. Transforming an array by putting each element through a function is done with <code>map</code>. You can use <code>reduce</code> to combine all the elements in an array into a single value. The <code>some</code> method tests whether any element matches a given predicate function. And <code>findIndex</code> finds the position of the first element that matches a predicate.</p>
+<h3>Exercises</h3>
+<h4>Flattening</h4>
+<p>Use the <code>reduce</code> method in combination with the <code>concat</code> method to “flatten” an array of arrays into a single array that has all the elements of the original arrays.</p>
+ok dang push
 </body>
 </html>
