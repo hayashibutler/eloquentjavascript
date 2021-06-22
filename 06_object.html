@@ -413,6 +413,32 @@ console.log(new Vec(1, 2).minus(new Vec(2, 3)));
 // → Vec{x: -1, y: -1}
 console.log(new Vec(3, 4).length);
 // → 5</pre>
+<p>Giải</p>
+<pre>class Vec {
+  constructor(x, y) {
+    this.a=x;
+    this.b=y;
+  }
+
+  plus(other) {
+    return new Vec(this.a + other.a, this.b + other.b);
+  }
+
+  minus(other) {
+    return new Vec(this.a - other.a, this.b - other.b);
+  }
+
+  get length() {
+    return Math.sqrt(this.a * this.a + this.b * this.b;
+  }
+}
+console.log(new Vec(1, 2).plus(new Vec(2, 3)).plus(new Vec(1,1)));
+// → Vec{x: 3, y: 5}
+console.log(new Vec(1, 2).minus(new Vec(2, 3)).plus(new Vec(1,1)));
+// → Vec{x: -1, y: -1}
+console.log(new Vec(3, 4).length);
+// → 5</pre>
+
 <h4>Groups</h4>
 <p>The standard JavaScript environment provides another data structure called Set. Like an instance of Map, a set holds a collection of values. Unlike Map, it does not associate other values with those—it just tracks which values are part of the set. A value can be part of a set only once—adding it again doesn’t have any effect.</p>
 <p>Write a class called Group (since Set is already taken). Like Set, it has add, delete, and has methods. Its constructor creates an empty group, add adds a value to the group (but only if it isn’t already a member), delete removes its argument from the group (if it was a member), and has returns a Boolean value indicating whether its argument is a member of the group.</p>
@@ -444,6 +470,63 @@ for (let value of Group.from(["a", "b", "c"])) {
 // → a
 // → b
 // → c</pre>
+<p>Giải</p>
+<pre>class Group {
+  constructor() {
+    this.members = [];
+  }
+
+  add(value) {
+    if (!this.has(value)) {
+      this.members.push(value);
+    }
+  }
+
+  delete(value) {
+    this.members = this.members.filter(v => v !== value);
+  }
+
+  has(value) {
+    return this.members.includes(value);
+  }
+
+  static from(collection) {
+    let group = new Group;
+    for (let value of collection) {
+      group.add(value);
+    }
+    return group;
+  }
+
+  [Symbol.iterator]() {
+    return new GroupIterator(this);
+  }
+}
+
+class GroupIterator {
+  constructor(group) {
+    this.group = group;
+    this.position = 0;
+  }
+
+  next() {
+    if (this.position >= this.group.members.length) {
+      return {done: true};
+    } else {
+      let result = {value: this.group.members[this.position],
+                    done: false};
+      this.position++;
+      return result;
+    }
+  }
+}
+
+for (let value of Group.from(["a", "b", "c"])) {
+  console.log(value);
+}
+// → a
+// → b
+// → c</pre>
 <h4>Borrowing a method</h4>
 <p>Earlier in the chapter I mentioned that an object’s hasOwnProperty can be used as a more robust alternative to the in operator when you want to ignore the prototype’s properties. But what if your map needs to include the word "hasOwnProperty"? You won’t be able to call that method anymore because the object’s own property hides the method value.</p>
 <p>Can you think of a way to call hasOwnProperty on an object that has its own property by that name?</p>
@@ -451,6 +534,11 @@ for (let value of Group.from(["a", "b", "c"])) {
 
 // Fix this call
 console.log(map.hasOwnProperty("one"));
+// → true</pre>
+<p>Giải</p>
+<pre>let map = {one: true, two: true, hasOwnProperty: true};
+
+console.log(Object.prototype.hasOwnProperty.call(map, "one"));
 // → true</pre>
 
 </body>
