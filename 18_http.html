@@ -2,9 +2,294 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title></title>
+	<title>chapter 18 - HTTP and Forms</title>
 </head>
 <body>
+<h4>Chapter 18</h4>
+<h2>HTTP and Forms</h2>
 
+<h3>Disabled fields</h3>
+<p>All form fields can be disabled through their disabled attribute. It is an attribute that can be specified without value—the fact that it is present at all disables the element.</p>
+<pre>< button>I'm all right< /button>
+< button disabled>I'm out< /button></pre>
+<p>Disabled fields cannot be focused or changed, and browsers make them look gray and faded.</p>
+<p>When a program is in the process of handling an action caused by some button or other control that might require communication with the server and thus take a while, it can be a good idea to disable the control until the action finishes. That way, when the user gets impatient and clicks it again, they don’t accidentally repeat their action.</p>
+<h3>The form as a whole</h3>
+<p>When a field is contained in a < form> element, its DOM element will have a form property linking back to the form’s DOM element. The < form> element, in turn, has a property called elements that contains an array-like collection of the fields inside it.</p>
+<p>The name attribute of a form field determines the way its value will be identified when the form is submitted. It can also be used as a property name when accessing the form’s elements property, which acts both as an array-like object (accessible by number) and a map (accessible by name).</p>
+<pre>< form action="example/submit.html">
+  Name: < input type="text" name="name">< br>
+  Password: < input type="password" name="password">< br>
+  < button type="submit">Log in< /button>
+< /form>
+< script>
+  let form = document.querySelector("form");
+  console.log(form.elements[1].type);
+  // → password
+  console.log(form.elements.password.type);
+  // → password
+  console.log(form.elements.name.form == form);
+  // → true
+< /script></pre>
+<p>A button with a type attribute of submit will, when pressed, cause the form to be submitted. Pressing enter when a form field is focused has the same effect.</p>
+<p>Submitting a form normally means that the browser navigates to the page indicated by the form’s action attribute, using either a GET or a POST request. But before that happens, a "submit" event is fired. You can handle this event with JavaScript and prevent this default behavior by calling preventDefault on the event object.< /p>
+<pre>< form action="example/submit.html">
+  Value: < input type="text" name="value">
+  < button type="submit">Save< /button>
+< /form>
+< script>
+  let form = document.querySelector("form");
+  form.addEventListener("submit", event => {
+    console.log("Saving value", form.elements.value.value);
+    event.preventDefault();
+  });
+< /script></pre>
+<p>Intercepting "submit" events in JavaScript has various uses. We can write code to verify that the values the user entered make sense and immediately show an error message instead of submitting the form. Or we can disable the regular way of submitting the form entirely, as in the example, and have our program handle the input, possibly using fetch to send it to a server without reloading the page.</p>
+<h3>Text fields</h3>
+<p>Fields created by < textarea> tags, or < input> tags with a type of text or password, share a common interface. Their DOM elements have a value property that holds their current content as a string value. Setting this property to another string changes the field’s content.</p>
+<p>The selectionStart and selectionEnd properties of text fields give us information about the cursor and selection in the text. When nothing is selected, these two properties hold the same number, indicating the position of the cursor. For example, 0 indicates the start of the text, and 10 indicates the cursor is after the 10th character. When part of the field is selected, the two properties will differ, giving us the start and end of the selected text. Like value, these properties may also be written to.</p>
+<p>Imagine you are writing an article about Khasekhemwy but have some trouble spelling his name. The following code wires up a < textarea> tag with an event handler that, when you press F2, inserts the string “Khasekhemwy” for you.</p>
+<pre>< textarea></ textarea>
+< script>
+  let textarea = document.querySelector("textarea");
+  textarea.addEventListener("keydown", event => {
+    // The key code for F2 happens to be 113
+    if (event.keyCode == 113) {
+      replaceSelection(textarea, "Khasekhemwy");
+      event.preventDefault();
+    }
+  });
+  function replaceSelection(field, word) {
+    let from = field.selectionStart, to = field.selectionEnd;
+    field.value = field.value.slice(0, from) + word +
+                  field.value.slice(to);
+    // Put the cursor after the word
+    field.selectionStart = from + word.length;
+    field.selectionEnd = from + word.length;
+  }
+< /script></pre>
+<p>The replaceSelection function replaces the currently selected part of a text field’s content with the given word and then moves the cursor after that word so that the user can continue typing.</p>
+<p>The "change" event for a text field does not fire every time something is typed. Rather, it fires when the field loses focus after its content was changed. To respond immediately to changes in a text field, you should register a handler for the "input" event instead, which fires for every time the user types a character, deletes text, or otherwise manipulates the field’s content.</p>
+<p>The following example shows a text field and a counter displaying the current length of the text in the field:</p>
+<pre>< input type="text"> length: < span id="length">0< /span>
+< script>
+  let text = document.querySelector("input");
+  let output = document.querySelector("#length");
+  text.addEventListener("input", () => {
+    output.textContent = text.value.length;
+  });
+</ script></pre>
+<h3>
+	Checkboxes and radio buttons
+</h3>
+<p>A checkbox field is a binary toggle. Its value can be extracted or changed through its checked property, which holds a Boolean value.</p>
+<pre>< label>
+  < input type="checkbox" id="purple"> Make this page purple
+< /label>
+< script>
+  let checkbox = document.querySelector("#purple");
+  checkbox.addEventListener("change", () => {
+    document.body.style.background =
+      checkbox.checked ? "mediumpurple" : "";
+  });
+< /script></pre>
+<p>The < label> tag associates a piece of document with an input field. Clicking anywhere on the label will activate the field, which focuses it and toggles its value when it is a checkbox or radio button.</p>
+<p>A radio button is similar to a checkbox, but it’s implicitly linked to other radio buttons with the same name attribute so that only one of them can be active at any time.</p>
+<pre>Color:
+< label>
+  < input type="radio" name="color" value="orange"> Orange
+< /label>
+< label>
+  < input type="radio" name="color" value="lightgreen"> Green
+< /label>
+< label>
+  < input type="radio" name="color" value="lightblue"> Blue
+< /label>
+< script>
+  let buttons = document.querySelectorAll("[name=color]");
+  for (let button of Array.from(buttons)) {
+    button.addEventListener("change", () => {
+      document.body.style.background = button.value;
+    });
+  }
+< /script></pre>
+<p>The square brackets in the CSS query given to querySelectorAll are used to match attributes. It selects elements whose name attribute is "color".</p>
+<h3>Select fields</h3>
+<p>Select fields are conceptually similar to radio buttons—they also allow the user to choose from a set of options. But where a radio button puts the layout of the options under our control, the appearance of a < select> tag is determined by the browser.</p>
+<p>Select fields also have a variant that is more akin to a list of checkboxes, rather than radio boxes. When given the multiple attribute, a < select> tag will allow the user to select any number of options, rather than just a single option. This will, in most browsers, show up differently than a normal select field, which is typically drawn as a drop-down control that shows the options only when you open it.</p>
+<p>Each < option> tag has a value. This value can be defined with a value attribute. When that is not given, the text inside the option will count as its value. The value property of a < select> element reflects the currently selected option. For a multiple field, though, this property doesn’t mean much since it will give the value of only one of the currently selected options.</p>
+<p>The < option> tags for a < select> field can be accessed as an array-like object through the field’s options property. Each option has a property called selected, which indicates whether that option is currently selected. The property can also be written to select or deselect an option.</p>
+<p>< select multiple>
+  < option value="1">0001< /option>
+  < option value="2">0010< /option>
+  < option value="4">0100< /option>
+  < option value="8">1000< /option>
+< /select> = < span id="output">0< /span>
+< script>
+  let select = document.querySelector("select");
+  let output = document.querySelector("#output");
+  select.addEventListener("change", () => {
+    let number = 0;
+    for (let option of Array.from(select.options)) {
+      if (option.selected) {
+        number += Number(option.value);
+      }
+    }
+    output.textContent = number;
+  });
+< /script></p>
+<h3>File fields</h3>
+<p>File fields were originally designed as a way to upload files from the user’s machine through a form. In modern browsers, they also provide a way to read such files from JavaScript programs. The field acts as a kind of gatekeeper. The script cannot simply start reading private files from the user’s computer, but if the user selects a file in such a field, the browser interprets that action to mean that the script may read the file.</p>
+<p>A file field usually looks like a button labeled with something like “choose file” or “browse”, with information about the chosen file next to it.</p>
+<pre>< input type="file">
+< script>
+  let input = document.querySelector("input");
+  input.addEventListener("change", () => {
+    if (input.files.length > 0) {
+      let file = input.files[0];
+      console.log("You chose", file.name);
+      if (file.type) console.log("It has type", file.type);
+    }
+  });
+< /script>
+</pre>
+<p>The files property of a file field element is an array-like object (again, not a real array) containing the files chosen in the field. It is initially empty. The reason there isn’t simply a file property is that file fields also support a multiple attribute, which makes it possible to select multiple files at the same time.</p>
+<p>Objects in the files object have properties such as name (the filename), size (the file’s size in bytes, which are chunks of 8 bits), and type (the media type of the file, such as text/plain or image/jpeg).</p>
+<p>What it does not have is a property that contains the content of the file. Getting at that is a little more involved. Since reading a file from disk can take time, the interface must be asynchronous to avoid freezing the document.</p>
+<pre>< input type="file" multiple>
+< script>
+  let input = document.querySelector("input");
+  input.addEventListener("change", () => {
+    for (let file of Array.from(input.files)) {
+      let reader = new FileReader();
+      reader.addEventListener("load", () => {
+        console.log("File", file.name, "starts with",
+                    reader.result.slice(0, 20));
+      });
+      reader.readAsText(file);
+    }
+  });
+< /script></pre>
+<p>
+Reading a file is done by creating a FileReader object, registering a "load" event handler for it, and calling its readAsText method, giving it the file we want to read. Once loading finishes, the reader’s result property contains the file’s content.</p>
+<p>FileReaders also fire an "error" event when reading the file fails for any reason. The error object itself will end up in the reader’s error property. This interface was designed before promises became part of the language. You could wrap it in a promise like this:</p>
+<pre>function readFileText(file) {
+  return new Promise((resolve, reject) => {
+    let reader = new FileReader();
+    reader.addEventListener(
+      "load", () => resolve(reader.result));
+    reader.addEventListener(
+      "error", () => reject(reader.error));
+    reader.readAsText(file);
+  });
+}</pre>
+<h3>Storing data client-side</h3>
+<p>Simple HTML pages with a bit of JavaScript can be a great format for “mini applications”—small helper programs that automate basic tasks. By connecting a few form fields with event handlers, you can do anything from converting between centimeters and inches to computing passwords from a master password and a website name.</p>
+<p>When such an application needs to remember something between sessions, you cannot use JavaScript bindings—those are thrown away every time the page is closed. You could set up a server, connect it to the Internet, and have your application store something there. We will see how to do that in Chapter 20. But that’s a lot of extra work and complexity. Sometimes it is enough to just keep the data in the browser.</p>
+<p>The localStorage object can be used to store data in a way that survives page reloads. This object allows you to file string values under names.</p>
+<pre>localStorage.setItem("username", "marijn");
+console.log(localStorage.getItem("username"));
+// → marijn
+localStorage.removeItem("username");</pre>
+<p>A value in localStorage sticks around until it is overwritten, it is removed with removeItem, or the user clears their local data.</p>
+<p>Sites from different domains get different storage compartments. That means data stored in localStorage by a given website can, in principle, be read (and overwritten) only by scripts on that same site.</p>
+<p>Browsers do enforce a limit on the size of the data a site can store in localStorage. That restriction, along with the fact that filling up people’s hard drives with junk is not really profitable, prevents the feature from eating up too much space.</p>
+<p>The following code implements a crude note-taking application. It keeps a set of named notes and allows the user to edit notes and create new ones.</p>
+<pre>Notes: < select>< select> < button>Add</ button>< br>
+< textarea style="width: 100%"></ textarea>
+
+< script>
+  let list = document.querySelector("select");
+  let note = document.querySelector("textarea");
+
+  let state;
+  function setState(newState) {
+    list.textContent = "";
+    for (let name of Object.keys(newState.notes)) {
+      let option = document.createElement("option");
+      option.textContent = name;
+      if (newState.selected == name) option.selected = true;
+      list.appendChild(option);
+    }
+    note.value = newState.notes[newState.selected];
+
+    localStorage.setItem("Notes", JSON.stringify(newState));
+    state = newState;
+  }
+  setState(JSON.parse(localStorage.getItem("Notes")) || {
+    notes: {"shopping list": "Carrots\nRaisins"},
+    selected: "shopping list"
+  });
+
+  list.addEventListener("change", () => {
+    setState({notes: state.notes, selected: list.value});
+  });
+  note.addEventListener("change", () => {
+    setState({
+      notes: Object.assign({}, state.notes,
+                           {[state.selected]: note.value}),
+      selected: state.selected
+    });
+  });
+  document.querySelector("button")
+    .addEventListener("click", () => {
+      let name = prompt("Note name");
+      if (name) setState({
+        notes: Object.assign({}, state.notes, {[name]: ""}),
+        selected: name
+      });
+    });
+< /script>
+</pre>
+<p>The script gets its starting state from the "Notes" value stored in localStorage or, if that is missing, creates an example state that has only a shopping list in it. Reading a field that does not exist from localStorage will yield null. Passing null to JSON.parse will make it parse the string "null" and return null. Thus, the || operator can be used to provide a default value in a situation like this.</p>
+<p>The setState method makes sure the DOM is showing a given state and stores the new state to localStorage. Event handlers call this function to move to a new state.</p>
+<p>The use of Object.assign in the example is intended to create a new object that is a clone of the old state.notes, but with one property added or overwritten. Object.assign takes its first argument and adds all properties from any further arguments to it. Thus, giving it an empty object will cause it to fill a fresh object. The square brackets notation in the third argument is used to create a property whose name is based on some dynamic value.</p>
+<p>There is another object, similar to localStorage, called sessionStorage. The difference between the two is that the content of sessionStorage is forgotten at the end of each session, which for most browsers means whenever the browser is closed.</p>
+<h3>Summary</h3>
+<p>In this chapter, we discussed how the HTTP protocol works. A client sends a request, which contains a method (usually GET) and a path that identifies a resource. The server then decides what to do with the request and responds with a status code and a response body. Both requests and responses may contain headers that provide additional information.</p>
+<p>The interface through which browser JavaScript can make HTTP requests is called fetch. Making a request looks like this:</p>
+<pre>fetch("/18_http.html").then(r => r.text()).then(text => {
+  console.log(`The page starts with ${text.slice(0, 15)}`);
+});</pre>
+<p>Browsers make GET requests to fetch the resources needed to display a web page. A page may also contain forms, which allow information entered by the user to be sent as a request for a new page when the form is submitted.</p>
+<p>HTML can represent various types of form fields, such as text fields, checkboxes, multiple-choice fields, and file pickers.</p>
+<p>Such fields can be inspected and manipulated with JavaScript. They fire the "change" event when changed, fire the "input" event when text is typed, and receive keyboard events when they have keyboard focus. Properties like value (for text and select fields) or checked (for checkboxes and radio buttons) are used to read or set the field’s content.</p>
+<p>When a form is submitted, a "submit" event is fired on it. A JavaScript handler can call preventDefault on that event to disable the browser’s default behavior. Form field elements may also occur outside of a form tag.</p>
+<p>When the user has selected a file from their local file system in a file picker field, the FileReader interface can be used to access the content of this file from a JavaScript program.</p>
+<p>The localStorage and sessionStorage objects can be used to save information in a way that survives page reloads. The first object saves the data forever (or until the user decides to clear it), and the second saves it until the browser is closed.</p>
+<h3>Exercises</h3>
+<h4>Content negotiation</h4>
+<p>One of the things HTTP can do is called content negotiation. The Accept request header is used to tell the server what type of document the client would like to get. Many servers ignore this header, but when a server knows of various ways to encode a resource, it can look at this header and send the one that the client prefers.</p>
+<p>The URL <a href="https://eloquentjavascript.net/author">https://eloquentjavascript.net/author</a> is configured to respond with either plaintext, HTML, or JSON, depending on what the client asks for. These formats are identified by the standardized media types text/plain, text/html, and application/json.
+</p>
+<p>Send requests to fetch all three formats of this resource. Use the headers property in the options object passed to fetch to set the header named Accept to the desired media type.</p>
+<p>Finally, try asking for the media type application/rainbows+unicorns and see which status code that produces.</p>
+<h4>A JavaScript workbench</h4>
+<p>Build an interface that allows people to type and run pieces of JavaScript code.</p>
+<p>Put a button next to a <textarea> field that, when pressed, uses the Function constructor we saw in Chapter 10 to wrap the text in a function and call it. Convert the return value of the function, or any error it raises, to a string and display it below the text field.</p>
+<pre>< textarea id="code">return "hi";< /textarea>
+< button id="button">Run< /button>
+< pre id="output">< /pre>
+
+< script>
+  // Your code here.
+< /script>
+</pre>
+<h4>Conway’s Game of Life</h4>
+<p>Conway’s Game of Life is a simple simulation that creates artificial “life” on a grid, each cell of which is either alive or not. Each generation (turn), the following rules are applied:</p>
+<ul>
+	<li>Any live cell with fewer than two or more than three live neighbors dies.</li>
+	<li>Any live cell with two or three live neighbors lives on to the next generation.</li>
+	<li>Any dead cell with exactly three live neighbors becomes a live cell.</li>
+</ul>
+<p>A neighbor is defined as any adjacent cell, including diagonally adjacent ones.</p>
+<p>Note that these rules are applied to the whole grid at once, not one square at a time. That means the counting of neighbors is based on the situation at the start of the generation, and changes happening to neighbor cells during this generation should not influence the new state of a given cell.</p>
+<p>Implement this game using whichever data structure you find appropriate. Use Math.random to populate the grid with a random pattern initially. Display it as a grid of checkbox fields, with a button next to it to advance to the next generation. When the user checks or unchecks the checkboxes, their changes should be included when computing the next generation.</p>
+<pre>< div id="grid">< /div>
+< button id="next">Next generation< /button>
+
+< script>
+  // Your code here.
+< /script></pre>
 </body>
 </html>
